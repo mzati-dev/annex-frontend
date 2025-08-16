@@ -1,103 +1,820 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { BookOpen, GraduationCap, Briefcase, X } from 'lucide-react';
+import { useAppContext } from '@/context/AppContext';
+import { AuthApiService } from '@/services/auth.service';
+import { UserProfile } from '@/types';
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+type AuthView = 'login' | 'signup' | 'forgotPassword' | 'none';
+type SignupStage = 'role-selection' | 'form';
+
+export default function App() {
+    const [authView, setAuthView] = useState<AuthView>('none');
+    const [signupData, setSignupData] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        dob: '',
+        gender: '',
+        password: '',
+        confirmPassword: ''
+    });
+    const [loginData, setLoginData] = useState({ email: '', password: '' });
+    const [forgotEmail, setForgotEmail] = useState('');
+    const [selectedRole, setSelectedRole] = useState<'student' | 'teacher'>('student');
+    const [signupStage, setSignupStage] = useState<SignupStage>('role-selection');
+    const [loading, setLoading] = useState(true);
+
+    const { login, user } = useAppContext();
+    const authService = new AuthApiService();
+    const router = useRouter();
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token && !user) {
+            authService.getProfile()
+                .then(profile => {
+                    login(profile);
+                    router.replace('/dashboard');
+                })
+                .catch(() => {
+                    localStorage.removeItem('token');
+                    setLoading(false);
+                });
+        } else if (user) {
+            router.replace('/dashboard');
+        } else {
+            setLoading(false);
+        }
+    }, [user]);
+
+
+    // Utility function to handle errors
+    const getErrorMessage = (error: unknown): string => {
+        if (error instanceof Error) return error.message;
+        if (typeof error === 'string') return error;
+        return 'An unexpected error occurred';
+    };
+
+
+    const handleSignupSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (signupData.password !== signupData.confirmPassword) {
+            alert("Passwords don't match!");
+            return;
+        }
+
+        try {
+            const response = await authService.register({
+                ...signupData,
+                role: selectedRole
+            });
+
+            // ✅ Go back to the login view instead of dashboard
+            setAuthView('login');
+            setSignupStage('role-selection');
+
+            // Optionally clear signup form
+            setSignupData({
+                name: '',
+                email: '',
+                phone: '',
+                dob: '',
+                gender: '',
+                password: '',
+                confirmPassword: ''
+            });
+
+        } catch (error) {
+            alert(getErrorMessage(error));
+        }
+    };
+
+
+    // const handleSignupSubmit = async (e: React.FormEvent) => {
+    //     e.preventDefault();
+    //     if (signupData.password !== signupData.confirmPassword) {
+    //         alert("Passwords don't match!");
+    //         return;
+    //     }
+
+    //     try {
+    //         const response = await authService.register({
+    //             ...signupData,
+    //             role: selectedRole
+    //         });
+    //         localStorage.setItem('token', response.token);
+    //         login(response.user);
+    //         router.replace('/dashboard'); // ✅ go straight to dashboard
+    //     } catch (error) {
+    //         alert(getErrorMessage(error));
+    //     }
+    // };
+
+    const handleLoginSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const response = await authService.login(loginData.email, loginData.password);
+            localStorage.setItem('token', response.token);
+            login(response.user);
+            router.replace('/dashboard'); // ✅ go straight to dashboard
+        } catch (error) {
+            alert(getErrorMessage(error));
+        }
+    };
+
+    const handleForgotSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await authService.forgotPassword(forgotEmail);
+            alert(`Password reset link sent to ${forgotEmail}`);
+            setAuthView('login');
+        } catch (error) {
+            alert(getErrorMessage(error));
+        }
+    };
+
+    const sharedInputClasses = "w-full p-3 bg-slate-700 border border-slate-600 rounded-md text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500";
+
+    const renderAuthContent = () => {
+        switch (authView) {
+            case 'forgotPassword':
+                return (
+                    <div className="animate-fade-in">
+                        <h2 className="text-2xl font-bold text-center mb-2 text-white">Reset Password</h2>
+                        <p className="text-slate-300 text-center mb-6">Enter your email to receive instructions.</p>
+                        <form onSubmit={handleForgotSubmit} className="space-y-4">
+                            <input
+                                type="email"
+                                placeholder="Email"
+                                value={forgotEmail}
+                                onChange={e => setForgotEmail(e.target.value)}
+                                className={sharedInputClasses}
+                                required
+                            />
+                            <button type="submit" className="w-full px-8 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg font-semibold shadow-lg transition">
+                                Send Reset Link
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setAuthView('login')}
+                                className="w-full px-8 py-3 border-2 border-blue-500 hover:bg-blue-500/20 rounded-lg font-semibold shadow-lg transition"
+                            >
+                                Back to Login
+                            </button>
+                        </form>
+                    </div>
+                );
+            case 'login':
+                return (
+                    <>
+                        <div className="flex justify-center mb-6 border-b border-slate-700">
+                            <button
+                                onClick={() => setAuthView('login')}
+                                className={`px-6 py-2 text-lg font-semibold transition-colors ${authView === 'login' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-slate-300'}`}
+                            >
+                                Login
+                            </button>
+                            <button onClick={() => setAuthView('signup')}>Sign Up</button>
+                        </div>
+                        <form onSubmit={handleLoginSubmit} className="space-y-4 animate-fade-in">
+                            <input
+                                type="email"
+                                placeholder="Email"
+                                value={loginData.email}
+                                onChange={e => setLoginData({ ...loginData, email: e.target.value })}
+                                className={sharedInputClasses}
+                                required
+                            />
+                            <input
+                                type="password"
+                                placeholder="Password"
+                                value={loginData.password}
+                                onChange={e => setLoginData({ ...loginData, password: e.target.value })}
+                                className={sharedInputClasses}
+                                required
+                            />
+                            <div className="text-right">
+                                <button
+                                    type="button"
+                                    onClick={() => setAuthView('forgotPassword')}
+                                    className="text-sm text-blue-400 hover:underline"
+                                >
+                                    Forgot Password?
+                                </button>
+                            </div>
+                            <button type="submit" className="w-full px-8 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg font-semibold shadow-lg transition">
+                                Login
+                            </button>
+                        </form>
+                    </>
+                );
+            case 'signup':
+                if (signupStage === 'role-selection') {
+                    return (
+                        <div className="animate-fade-in">
+                            <h2 className="text-2xl font-bold text-center mb-6 text-white">Select Your Role</h2>
+                            <div className="space-y-4 mb-6">
+                                <label className="flex items-center space-x-3 p-4 bg-slate-700 border border-slate-600 rounded-lg cursor-pointer hover:bg-slate-800 transition">
+                                    <input
+                                        type="radio"
+                                        name="role"
+                                        checked={selectedRole === 'student'}
+                                        onChange={() => setSelectedRole('student')}
+                                        className="h-5 w-5 text-blue-500"
+                                    />
+                                    <div className="flex items-center">
+                                        <GraduationCap className="h-6 w-6 mr-2" />
+                                        <span className="font-medium">Student</span>
+                                    </div>
+                                </label>
+                                <label className="flex items-center space-x-3 p-4 bg-slate-700 border border-slate-600 rounded-lg cursor-pointer hover:bg-slate-800 transition">
+                                    <input
+                                        type="radio"
+                                        name="role"
+                                        checked={selectedRole === 'teacher'}
+                                        onChange={() => setSelectedRole('teacher')}
+                                        className="h-5 w-5 text-blue-500"
+                                    />
+                                    <div className="flex items-center">
+                                        <Briefcase className="h-6 w-6 mr-2" />
+                                        <span className="font-medium">Teacher</span>
+                                    </div>
+                                </label>
+                            </div>
+                            <button
+                                onClick={() => setSignupStage('form')}
+                                className="w-full px-8 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg font-semibold shadow-lg transition"
+                            >
+                                Continue
+                            </button>
+                        </div>
+                    );
+                } else {
+                    return (
+                        <div className="flex flex-col h-full">
+                            <div className="flex justify-center mb-4 border-b border-slate-700">
+                                <button onClick={() => setAuthView('login')}>Login</button>
+                                <button
+                                    onClick={() => setAuthView('signup')}
+                                    className={`px-6 py-2 text-lg font-semibold transition-colors ${authView === 'signup' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-slate-300'}`}
+                                >
+                                    Sign Up
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto">
+                                <form onSubmit={handleSignupSubmit} className="space-y-4 pb-4">
+                                    <input
+                                        type="text"
+                                        placeholder="Full Name"
+                                        value={signupData.name}
+                                        onChange={e => setSignupData({ ...signupData, name: e.target.value })}
+                                        className={sharedInputClasses}
+                                        required
+                                    />
+                                    <input
+                                        type="email"
+                                        placeholder="Email"
+                                        value={signupData.email}
+                                        onChange={e => setSignupData({ ...signupData, email: e.target.value })}
+                                        className={sharedInputClasses}
+                                        required
+                                    />
+                                    <input
+                                        type="tel"
+                                        placeholder="Phone Number"
+                                        value={signupData.phone}
+                                        onChange={e => setSignupData({ ...signupData, phone: e.target.value })}
+                                        className={sharedInputClasses}
+                                        required
+                                    />
+                                    <input
+                                        type="date"
+                                        value={signupData.dob}
+                                        onChange={e => setSignupData({ ...signupData, dob: e.target.value })}
+                                        className={sharedInputClasses}
+                                        required
+                                    />
+                                    <select
+                                        value={signupData.gender}
+                                        onChange={e => setSignupData({ ...signupData, gender: e.target.value })}
+                                        className={sharedInputClasses}
+                                        required
+                                    >
+                                        <option value="">Select Gender</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                        <option value="other">Other</option>
+                                        <option value="prefer-not-to-say">Prefer not to say</option>
+                                    </select>
+                                    <input
+                                        type="password"
+                                        placeholder="Password"
+                                        value={signupData.password}
+                                        onChange={e => setSignupData({ ...signupData, password: e.target.value })}
+                                        className={sharedInputClasses}
+                                        required
+                                    />
+                                    <input
+                                        type="password"
+                                        placeholder="Confirm Password"
+                                        value={signupData.confirmPassword}
+                                        onChange={e => setSignupData({ ...signupData, confirmPassword: e.target.value })}
+                                        className={sharedInputClasses}
+                                        required
+                                    />
+                                </form>
+                            </div>
+                            <button
+                                type="submit"
+                                onClick={handleSignupSubmit}
+                                className="w-full px-8 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg font-semibold shadow-lg transition mt-4"
+                            >
+                                Create Account
+                            </button>
+                        </div>
+                    );
+                }
+            default:
+                return null;
+        }
+    };
+
+    if (loading) {
+        return <div className="text-white">Loading...</div>;
+    }
+
+    return (
+        <main className="min-h-screen bg-slate-900 flex flex-col items-center justify-center px-6 text-white">
+            <h1 className="text-5xl font-extrabold mb-6 text-center drop-shadow-lg">
+                Welcome to <span className="text-blue-400">Mzatinova Demia</span>
+            </h1>
+            <p className="max-w-xl text-center text-lg mb-10 leading-relaxed drop-shadow-md text-slate-300">
+                Empowering secondary education learners and teachers with quality resources, interactive lessons, and a supportive community.
+            </p>
+
+            <div className="flex space-x-6">
+                <button
+                    onClick={() => setAuthView('login')}
+                    className="px-8 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg font-semibold shadow-lg transition"
+                >
+                    Log In
+                </button>
+                <button
+                    onClick={() => {
+                        setAuthView('signup');
+                        setSignupStage('role-selection');
+                    }}
+                    className="px-8 py-3 border-2 border-blue-500 hover:bg-blue-500 hover:text-white rounded-lg font-semibold shadow-lg transition"
+                >
+                    Sign Up
+                </button>
+            </div>
+
+            {authView !== 'none' && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+                    <div className="relative w-full max-w-md bg-slate-800/80 backdrop-blur-sm border border-slate-700 rounded-lg shadow-2xl p-6 animate-fade-in max-h-[90vh] flex flex-col">
+                        <button
+                            onClick={() => {
+                                setAuthView('none');
+                                setSignupStage('role-selection');
+                            }}
+                            className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white transition-colors rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            aria-label="Close"
+                        >
+                            <X className="h-6 w-6" />
+                        </button>
+
+                        <div className="text-center mb-4">
+                            <BookOpen className="h-10 w-10 text-blue-400 mx-auto mb-2" />
+                            <h1 className="text-2xl font-bold">Mzatinova Demia</h1>
+                            <p className="text-slate-300 text-sm">Learn and teach secondary education subjects</p>
+                        </div>
+                        <div className="flex-1 overflow-y-auto">
+                            {renderAuthContent()}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <footer className="mt-20 text-sm text-slate-400 opacity-80">
+                © {new Date().getFullYear()} Mzatinova Demia. All rights reserved.
+            </footer>
+        </main>
+    );
 }
+
+
+// 'use client';
+
+// import { useState } from 'react';
+// import { BookOpen, GraduationCap, Briefcase, X } from 'lucide-react';
+// import { useAppContext } from '@/context/AppContext';
+// import { UserProfile } from '@/types';
+// import { AuthApiService } from '@/services/auth.service';
+
+// type AuthView = 'login' | 'signup' | 'forgotPassword' | 'none';
+// type SignupStage = 'role-selection' | 'form';
+
+// export default function App() {
+//     const [authView, setAuthView] = useState<AuthView>('none');
+//     const [signupData, setSignupData] = useState({
+//         name: '',
+//         email: '',
+//         phone: '',
+//         dob: '',
+//         gender: '',
+//         password: '',
+//         confirmPassword: ''
+//     });
+//     const [loginData, setLoginData] = useState({ email: '', password: '' });
+//     const [forgotEmail, setForgotEmail] = useState('');
+//     const [selectedRole, setSelectedRole] = useState<'student' | 'teacher'>('student');
+//     const [signupStage, setSignupStage] = useState<SignupStage>('role-selection');
+//     const { login } = useAppContext();
+//     const authService = new AuthApiService();
+
+//     // const handleSignupSubmit = (e: React.FormEvent) => {
+//     //     e.preventDefault();
+//     //     if (signupData.password !== signupData.confirmPassword) {
+//     //         alert("Passwords don't match!");
+//     //         return;
+//     //     }
+//     //     console.log('Registered:', { ...signupData, role: selectedRole });
+//     //     localStorage.setItem('userData', JSON.stringify({
+//     //         ...signupData,
+//     //         role: selectedRole
+//     //     }));
+//     //     setAuthView('login');
+//     //     setSignupStage('role-selection');
+//     // };
+
+//     // Utility function to handle errors
+//     const getErrorMessage = (error: unknown): string => {
+//         if (error instanceof Error) return error.message;
+//         if (typeof error === 'string') return error;
+//         return 'An unexpected error occurred';
+//     };
+
+//     const handleSignupSubmit = async (e: React.FormEvent) => {
+//         e.preventDefault();
+//         if (signupData.password !== signupData.confirmPassword) {
+//             alert("Passwords don't match!");
+//             return;
+//         }
+
+//         try {
+//             const response = await authService.register({
+//                 ...signupData,
+//                 role: selectedRole
+//             });
+//             localStorage.setItem('token', response.token);
+//             login(response.user);
+//             setAuthView('none');
+//         } catch (error) {
+//             alert(getErrorMessage(error));
+//         }
+//     };
+
+//     // const handleLoginSubmit = (e: React.FormEvent) => {
+//     //     e.preventDefault();
+//     //     const storedUser = localStorage.getItem('userData');
+//     //     let user: UserProfile;
+
+//     //     if (storedUser) {
+//     //         const { name, email, role } = JSON.parse(storedUser);
+//     //         user = {
+//     //             id: 'u' + Date.now(),
+//     //             name,
+//     //             email,
+//     //             role
+//     //         };
+//     //     } else {
+//     //         user = {
+//     //             id: 'u' + Date.now(),
+//     //             name: 'Demo User',
+//     //             email: loginData.email,
+//     //             role: selectedRole
+//     //         };
+//     //     }
+
+//     //     login(user);
+//     // };
+
+
+//     const handleLoginSubmit = async (e: React.FormEvent) => {
+//         e.preventDefault();
+//         try {
+//             const response = await authService.login(loginData.email, loginData.password);
+//             console.log("Login successful, response:", response);
+//             localStorage.setItem('token', response.token);
+//             login(response.user);
+//             setAuthView('none');
+//         } catch (error) {
+//             alert(getErrorMessage(error));
+//         }
+//     };
+
+
+//     // const handleForgotSubmit = (e: React.FormEvent) => {
+//     //     e.preventDefault();
+//     //     console.log(`Password reset link sent to ${forgotEmail}`);
+//     //     setAuthView('login');
+//     // };
+
+//     const handleForgotSubmit = async (e: React.FormEvent) => {
+//         e.preventDefault();
+//         try {
+//             await authService.forgotPassword(forgotEmail);
+//             alert(`Password reset link sent to ${forgotEmail}`);
+//             setAuthView('login');
+//         } catch (error) {
+//             alert(getErrorMessage(error));
+//         }
+//     };
+
+//     const sharedInputClasses = "w-full p-3 bg-slate-700 border border-slate-600 rounded-md text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500";
+
+//     const renderAuthContent = () => {
+//         switch (authView) {
+//             case 'forgotPassword':
+//                 return (
+//                     <div className="animate-fade-in">
+//                         <h2 className="text-2xl font-bold text-center mb-2 text-white">Reset Password</h2>
+//                         <p className="text-slate-300 text-center mb-6">Enter your email to receive instructions.</p>
+//                         <form onSubmit={handleForgotSubmit} className="space-y-4">
+//                             <input
+//                                 type="email"
+//                                 placeholder="Email"
+//                                 value={forgotEmail}
+//                                 onChange={e => setForgotEmail(e.target.value)}
+//                                 className={sharedInputClasses}
+//                                 required
+//                             />
+//                             <button
+//                                 type="submit"
+//                                 className="w-full px-8 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg font-semibold shadow-lg transition"
+//                             >
+//                                 Send Reset Link
+//                             </button>
+//                             <button
+//                                 type="button"
+//                                 onClick={() => setAuthView('login')}
+//                                 className="w-full px-8 py-3 border-2 border-blue-500 hover:bg-blue-500/20 rounded-lg font-semibold shadow-lg transition"
+//                             >
+//                                 Back to Login
+//                             </button>
+//                         </form>
+//                     </div>
+//                 );
+//             case 'login':
+//                 return (
+//                     <>
+//                         <div className="flex justify-center mb-6 border-b border-slate-700">
+//                             <button
+//                                 onClick={() => setAuthView('login')}
+//                                 className={`px-6 py-2 text-lg font-semibold transition-colors ${authView === 'login' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-slate-300'}`}
+//                             >
+//                                 Login
+//                             </button>
+//                             <button
+//                                 onClick={() => setAuthView('signup')}
+//                             // className={`px-6 py-2 text-lg font-semibold transition-colors ${authView === 'signup' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-slate-300'}`}
+//                             >
+//                                 Sign Up
+//                             </button>
+//                         </div>
+//                         <form onSubmit={handleLoginSubmit} className="space-y-4 animate-fade-in">
+//                             <input
+//                                 type="email"
+//                                 placeholder="Email"
+//                                 value={loginData.email}
+//                                 onChange={e => setLoginData({ ...loginData, email: e.target.value })}
+//                                 className={sharedInputClasses}
+//                                 required
+//                             />
+//                             <input
+//                                 type="password"
+//                                 placeholder="Password"
+//                                 value={loginData.password}
+//                                 onChange={e => setLoginData({ ...loginData, password: e.target.value })}
+//                                 className={sharedInputClasses}
+//                                 required
+//                             />
+//                             <div className="text-right">
+//                                 <button
+//                                     type="button"
+//                                     onClick={() => setAuthView('forgotPassword')}
+//                                     className="text-sm text-blue-400 hover:underline"
+//                                 >
+//                                     Forgot Password?
+//                                 </button>
+//                             </div>
+//                             <button
+//                                 type="submit"
+//                                 className="w-full px-8 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg font-semibold shadow-lg transition"
+//                             >
+//                                 Login
+//                             </button>
+//                         </form>
+//                     </>
+//                 );
+//             case 'signup':
+//                 if (signupStage === 'role-selection') {
+//                     return (
+//                         <div className="animate-fade-in">
+//                             <h2 className="text-2xl font-bold text-center mb-6 text-white">Select Your Role</h2>
+//                             <div className="space-y-4 mb-6">
+//                                 <label className="flex items-center space-x-3 p-4 bg-slate-700 border border-slate-600 rounded-lg cursor-pointer hover:bg-slate-800 transition">
+//                                     <input
+//                                         type="radio"
+//                                         name="role"
+//                                         checked={selectedRole === 'student'}
+//                                         onChange={() => setSelectedRole('student')}
+//                                         className="h-5 w-5 text-blue-500"
+//                                     />
+//                                     <div className="flex items-center">
+//                                         <GraduationCap className="h-6 w-6 mr-2" />
+//                                         <span className="font-medium">Student</span>
+//                                     </div>
+//                                 </label>
+//                                 <label className="flex items-center space-x-3 p-4 bg-slate-700 border border-slate-600 rounded-lg cursor-pointer hover:bg-slate-800 transition">
+//                                     <input
+//                                         type="radio"
+//                                         name="role"
+//                                         checked={selectedRole === 'teacher'}
+//                                         onChange={() => setSelectedRole('teacher')}
+//                                         className="h-5 w-5 text-blue-500"
+//                                     />
+//                                     <div className="flex items-center">
+//                                         <Briefcase className="h-6 w-6 mr-2" />
+//                                         <span className="font-medium">Teacher</span>
+//                                     </div>
+//                                 </label>
+//                             </div>
+//                             <button
+//                                 onClick={() => setSignupStage('form')}
+//                                 className="w-full px-8 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg font-semibold shadow-lg transition"
+//                             >
+//                                 Continue
+//                             </button>
+//                         </div>
+//                     );
+//                 } else {
+//                     return (
+//                         <div className="flex flex-col h-full">
+//                             <div className="flex justify-center mb-4 border-b border-slate-700">
+//                                 <button
+//                                     onClick={() => setAuthView('login')}
+//                                 // className={`px-6 py-2 text-lg font-semibold transition-colors ${authView === 'login' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-slate-300'}`}
+//                                 >
+//                                     Login
+//                                 </button>
+//                                 <button
+//                                     onClick={() => setAuthView('signup')}
+//                                     className={`px-6 py-2 text-lg font-semibold transition-colors ${authView === 'signup' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-slate-300'}`}
+//                                 >
+//                                     Sign Up
+//                                 </button>
+//                             </div>
+//                             <div className="flex-1 overflow-y-auto">
+//                                 <form onSubmit={handleSignupSubmit} className="space-y-4 pb-4">
+//                                     <input
+//                                         type="text"
+//                                         placeholder="Full Name"
+//                                         value={signupData.name}
+//                                         onChange={e => setSignupData({ ...signupData, name: e.target.value })}
+//                                         className={sharedInputClasses}
+//                                         required
+//                                     />
+//                                     <input
+//                                         type="email"
+//                                         placeholder="Email"
+//                                         value={signupData.email}
+//                                         onChange={e => setSignupData({ ...signupData, email: e.target.value })}
+//                                         className={sharedInputClasses}
+//                                         required
+//                                     />
+//                                     <input
+//                                         type="tel"
+//                                         placeholder="Phone Number"
+//                                         value={signupData.phone}
+//                                         onChange={e => setSignupData({ ...signupData, phone: e.target.value })}
+//                                         className={sharedInputClasses}
+//                                         required
+//                                     />
+//                                     <input
+//                                         type="date"
+//                                         placeholder="Date of Birth"
+//                                         value={signupData.dob}
+//                                         onChange={e => setSignupData({ ...signupData, dob: e.target.value })}
+//                                         className={sharedInputClasses}
+//                                         required
+//                                     />
+//                                     <select
+//                                         value={signupData.gender}
+//                                         onChange={e => setSignupData({ ...signupData, gender: e.target.value })}
+//                                         className={sharedInputClasses}
+//                                         required
+//                                     >
+//                                         <option value="">Select Gender</option>
+//                                         <option value="male">Male</option>
+//                                         <option value="female">Female</option>
+//                                         <option value="other">Other</option>
+//                                         <option value="prefer-not-to-say">Prefer not to say</option>
+//                                     </select>
+//                                     <input
+//                                         type="password"
+//                                         placeholder="Password"
+//                                         value={signupData.password}
+//                                         onChange={e => setSignupData({ ...signupData, password: e.target.value })}
+//                                         className={sharedInputClasses}
+//                                         required
+//                                     />
+//                                     <input
+//                                         type="password"
+//                                         placeholder="Confirm Password"
+//                                         value={signupData.confirmPassword}
+//                                         onChange={e => setSignupData({ ...signupData, confirmPassword: e.target.value })}
+//                                         className={sharedInputClasses}
+//                                         required
+//                                     />
+//                                 </form>
+//                             </div>
+//                             <button
+//                                 type="submit"
+//                                 onClick={handleSignupSubmit}
+//                                 className="w-full px-8 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg font-semibold shadow-lg transition mt-4"
+//                             >
+//                                 Create Account
+//                             </button>
+//                         </div>
+//                     );
+//                 }
+//             default:
+//                 return null;
+//         }
+//     };
+
+//     return (
+//         <main className="min-h-screen bg-slate-900 flex flex-col items-center justify-center px-6 text-white">
+//             <h1 className="text-5xl font-extrabold mb-6 text-center drop-shadow-lg">
+//                 Welcome to <span className="text-blue-400">Mzatinova Demia</span>
+//             </h1>
+//             <p className="max-w-xl text-center text-lg mb-10 leading-relaxed drop-shadow-md text-slate-300">
+//                 Empowering secondary education learners and teachers with quality resources, interactive lessons, and a supportive community.
+//             </p>
+
+//             <div className="flex space-x-6">
+//                 <button
+//                     onClick={() => setAuthView('login')}
+//                     className="px-8 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg font-semibold shadow-lg transition"
+//                 >
+//                     Log In
+//                 </button>
+//                 <button
+//                     onClick={() => {
+//                         setAuthView('signup');
+//                         setSignupStage('role-selection');
+//                     }}
+//                     className="px-8 py-3 border-2 border-blue-500 hover:bg-blue-500 hover:text-white rounded-lg font-semibold shadow-lg transition"
+//                 >
+//                     Sign Up
+//                 </button>
+//             </div>
+
+//             {authView !== 'none' && (
+//                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+//                     <div className="relative w-full max-w-md bg-slate-800/80 backdrop-blur-sm border border-slate-700 rounded-lg shadow-2xl p-6 animate-fade-in max-h-[90vh] flex flex-col">
+//                         <button
+//                             onClick={() => {
+//                                 setAuthView('none');
+//                                 setSignupStage('role-selection');
+//                             }}
+//                             className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white transition-colors rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                             aria-label="Close"
+//                         >
+//                             <X className="h-6 w-6" />
+//                         </button>
+
+//                         <div className="text-center mb-4">
+//                             <BookOpen className="h-10 w-10 text-blue-400 mx-auto mb-2" />
+//                             <h1 className="text-2xl font-bold">Mzatinova Demia</h1>
+//                             <p className="text-slate-300 text-sm">Learn and teach secondary education subjects</p>
+//                         </div>
+//                         <div className="flex-1 overflow-y-auto">
+//                             {renderAuthContent()}
+//                         </div>
+//                     </div>
+//                 </div>
+//             )}
+
+//             <footer className="mt-20 text-sm text-slate-400 opacity-80">
+//                 © {new Date().getFullYear()} Mzatinova Demia. All rights reserved.
+//             </footer>
+//         </main>
+//     );
+// }
+

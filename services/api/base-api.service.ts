@@ -1,0 +1,65 @@
+// src/services/api/base-api.service.ts
+import { API_BASE_URL } from './api.constants';
+
+export class BaseApiService {
+    protected async request<T>(
+        method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+        endpoint: string,
+        data?: any
+    ): Promise<T> {
+        const url = `${API_BASE_URL}${endpoint}`;
+        const headers: Record<string, string> = {
+            // 'Content-Type': 'application/json',
+        };
+
+        if (!(data instanceof FormData)) {
+            headers['Content-Type'] = 'application/json';
+        }
+
+        // Add auth token if exists
+        const token = localStorage.getItem('token');
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const config: RequestInit = {
+            method,
+            headers,
+            credentials: 'include', // For cookies if using HTTP-only tokens
+        };
+
+        // if (data) {
+        //     config.body = JSON.stringify(data);
+        // }
+
+        if (data) {
+            config.body = data instanceof FormData ? data : JSON.stringify(data);
+        }
+
+        const response = await fetch(url, config);
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.message || 'Request failed');
+        }
+
+        return response.json();
+    }
+
+    // Convenience methods
+    protected get<T>(endpoint: string): Promise<T> {
+        return this.request('GET', endpoint);
+    }
+
+    protected post<T>(endpoint: string, data: any): Promise<T> {
+        return this.request('POST', endpoint, data);
+    }
+
+    protected put<T>(endpoint: string, data: any): Promise<T> {
+        return this.request('PUT', endpoint, data);
+    }
+
+    protected delete<T>(endpoint: string): Promise<T> {
+        return this.request('DELETE', endpoint);
+    }
+}
