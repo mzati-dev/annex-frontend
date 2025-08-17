@@ -51,6 +51,7 @@ export default function CartModal({ isOpen, onClose }: { isOpen: boolean; onClos
 
                 purchaseCart();
                 setPurchaseSuccess(true);
+                
 
                 setTimeout(() => {
                     setPurchaseSuccess(false);
@@ -64,6 +65,7 @@ export default function CartModal({ isOpen, onClose }: { isOpen: boolean; onClos
         } finally {
             setIsProcessing(false);
         }
+
     };
 
     if (!isOpen) return null;

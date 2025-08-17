@@ -1,7 +1,7 @@
 'use client';
 
 import { useAppContext } from '../../context/AppContext';
-import { FileText, DollarSign, Plus, ShoppingBag, Eye, Trash2, Archive, Edit } from 'lucide-react';
+import { FileText, DollarSign, Plus, ShoppingBag, Eye, Trash2, Archive, Edit, Star } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import StatCard from '../common/StatCard';
 import LessonForm from './LessonForm';
@@ -11,12 +11,13 @@ import Modal from '../common/Modal';
 import { TeacherApiService } from '@/services/api/teacher-api.service';
 
 export default function TeacherDashboard() {
-    const { user } = useAppContext();
+    const { user, searchTerm } = useAppContext();
     const [lessons, setLessons] = useState<Lesson[]>([]);
     const [showForm, setShowForm] = useState(false);
     const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
     const [viewingStudents, setViewingStudents] = useState<{ lessonId: string, students: string[] } | null>(null);
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
     const [salesData, setSalesData] = useState({
         totalLessonsSold: 0,
         totalSales: 0,
@@ -69,15 +70,27 @@ export default function TeacherDashboard() {
         fetchData();
     }, [user?.id]);
 
-    const teacherLessons = useMemo(() => {
-        console.log('Filtered teacherLessons:');
-        return lessons;
-    }, [lessons, user]);
+    // const teacherLessons = useMemo(() => {
+    //     console.log('Filtered teacherLessons:');
+    //     return lessons;
+    // }, [lessons, user]);
 
-    const getDemoSalesCount = (lessonId: string) => {
-        const base = parseInt(lessonId.replace(/\D/g, '')) || 1;
-        return (base % 4) + 2; // 2-5 sales demo
-    };
+    const teacherLessons = useMemo(() => {
+        if (!searchTerm) return lessons; // Show all if no search
+
+        return lessons.filter((lesson) => {
+            const searchLower = searchTerm.toLowerCase();
+            return (
+                lesson.subject.toLowerCase().includes(searchLower) ||
+                lesson.form.toLowerCase().includes(searchLower)
+            );
+        });
+    }, [lessons, user, searchTerm]);
+
+    // const getDemoSalesCount = (lessonId: string) => {
+    //     const base = parseInt(lessonId.replace(/\D/g, '')) || 1;
+    //     return (base % 4) + 2; // 2-5 sales demo
+    // };
 
     const handleSubmit = async (formData: Omit<Lesson, 'id' | 'teacherId' | 'teacherName' | 'createdAt'>) => {
         if (!user) return;
@@ -156,7 +169,10 @@ export default function TeacherDashboard() {
             <div className="fixed left-0 right-0 bg-slate-900/90 backdrop-blur-md z-20 p-6 border-b border-slate-700 -mt-8">
                 <div className="max-w-7xl mx-auto">
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-3xl font-bold text-white">Teacher Dashboard</h2>
+                        {/* <h2 className="text-3xl font-bold text-white">Teacher Dashboard</h2> */}
+                        <h2 className="text-3xl font-bold text-white">
+                            Welcome back, {user?.name.split(' ')[0]}!
+                        </h2>
                         <Button onClick={handleAddNew}>
                             <Plus className="h-5 w-5 mr-2" />
                             Create New Lesson
@@ -182,21 +198,54 @@ export default function TeacherDashboard() {
                                 // const salesCount = getDemoSalesCount(lesson.id);
                                 const salesCount = lesson.salesCount || 0;
                                 return (
-                                    <div key={lesson.id} className="relative bg-slate-800 rounded-lg p-4 border border-slate-700 hover:border-slate-500 transition-colors">
-                                        <span className="absolute top-2 right-2 bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full">
-                                            {salesCount} sales
-                                        </span>
+                                    <div key={lesson.id} className="relative bg-slate-800 rounded-lg p-4 border border-slate-700 hover:border-slate-500 transition-colors flex flex-col h-full">
 
-                                        <div className="space-y-2">
+
+
+                                        <div className="flex-grow space-y-2">
                                             <h4 className="font-bold text-lg text-white">{lesson.title}</h4>
-                                            <p className="text-slate-300 text-sm line-clamp-2">{lesson.description}</p>
-                                            <div className="flex justify-between text-sm text-slate-400">
-                                                <span>{lesson.subject}</span>
-                                                <span>MWK {Number(lesson.price).toFixed(2)}</span>
+                                            <p className="text-slate-300 text-sm line-clamp-2 h-[40px]">{lesson.description}</p>
+                                        </div>
+                                        <div className="mt-auto">
+                                            <div className="flex justify-between text-sm text-slate-400 pt-3">
+
+                                                <div>
+                                                    <span>{lesson.subject}</span>
+                                                    <span className="ml-2 text-slate-500">|</span>
+                                                    <span className="ml-2">{lesson.form}</span>
+                                                </div>
+                                                <span className="font-semibold text-white">MWK {Number(lesson.price).toFixed(2)}</span>
                                             </div>
+                                            <div className="mt-2 flex justify-between items-center">
+                                                {/* Sales count badge */}
+                                                <span className="bg-slate-700 text-green-500 text-xs font-bold px-2 py-1 rounded-full">
+                                                    {salesCount} sales
+                                                </span>
+
+                                                {/* Rating badge: dark pill background with yellow star + number */}
+                                                {lesson.averageRating != null && (
+                                                    <div className="bg-slate-700 px-2 py-1 rounded-full flex items-center gap-1">
+                                                        <Star className="w-3 h-3 text-yellow-400" fill="currentColor" />
+                                                        <span className="text-yellow-400 font-bold text-xs">
+                                                            {lesson.averageRating.toFixed(1)}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+
+
                                         </div>
 
-                                        <div className="mt-4 flex justify-between border-t border-slate-700 pt-3">
+
+
+
+
+
+
+
+
+                                        <div className="mt-3 flex justify-between border-t border-slate-700 pt-3">
                                             <button onClick={() => handleViewStudents(lesson.id)} className="text-blue-400 hover:text-blue-300 p-1">
                                                 <Eye className="h-5 w-5" />
                                             </button>

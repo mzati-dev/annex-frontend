@@ -20,7 +20,7 @@ export default function Header({ onCartClick }: { onCartClick?: () => void }) {
                     {/* Left - Logo */}
                     <div className="flex items-center">
                         <BookOpen className="h-8 w-8 text-blue-500" />
-                        <h1 className="ml-3 text-xl font-bold text-white">Mzatinova Demia</h1>
+                        <h1 className="ml-3 text-xl font-bold text-white">Annex</h1>
                     </div>
 
                     {/* Center - Search bar (students and teachers) */}
@@ -30,7 +30,7 @@ export default function Header({ onCartClick }: { onCartClick?: () => void }) {
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
                                 <input
                                     type="text"
-                                    placeholder={user.role === 'teacher' ? "Search your lessons..." : "Search lessons..."}
+                                    placeholder={user.role === 'teacher' ? "Search by subject or form (e.g., 'Math' or 'Form 1')" : "Search lessons..."}
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="w-full bg-slate-700 border border-slate-600 rounded-md pl-9 pr-4 py-1.5 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"

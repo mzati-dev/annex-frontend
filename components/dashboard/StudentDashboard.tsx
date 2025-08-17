@@ -12,7 +12,7 @@ import { Lesson } from '@/types';
 import { StudentApiService } from '@/services/api/student-api.service';
 
 export default function StudentDashboard() {
-    const { searchTerm, addToCart } = useAppContext();
+    const { user, searchTerm, addToCart } = useAppContext();
 
     const [lessons, setLessons] = useState<Lesson[]>([]);
     const [purchasedLessonIds, setPurchasedLessonIds] = useState<string[]>([]);
@@ -143,6 +143,13 @@ export default function StudentDashboard() {
 
             {/* Header with stats and filters */}
             <div className="fixed left-0 right-0 bg-slate-900/90 backdrop-blur-md z-20 p-6 border-b border-slate-700 -mt-8">
+                <div className="flex justify-between items-center mb-6">
+                    {/* <h2 className="text-3xl font-bold text-white">Teacher Dashboard</h2> */}
+                    <h2 className="text-3xl font-bold text-white">
+                        Welcome back, {user?.name.split(' ')[0]}!
+                    </h2>
+
+                </div>
                 <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
                     <StatCard
                         icon={BookOpen}

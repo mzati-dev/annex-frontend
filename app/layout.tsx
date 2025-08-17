@@ -6,8 +6,11 @@ import { Providers } from './providers';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Mzatinova Demia',
-  description: 'Learn and teach secondary education subjects',
+  title: 'Annex',
+  description: 'The knowledge marketplace. Annex is the marketplace where students unlock knowledge and educators turn expertise into impact, from secondary school to university and beyond.',
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 export default function RootLayout({

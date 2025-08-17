@@ -26,7 +26,7 @@ export default function App() {
     const [selectedRole, setSelectedRole] = useState<'student' | 'teacher'>('student');
     const [signupStage, setSignupStage] = useState<SignupStage>('role-selection');
     const [loading, setLoading] = useState(true);
-
+    const [loginLoading, setLoginLoading] = useState(false);
     const { login, user } = useAppContext();
     const authService = new AuthApiService();
     const router = useRouter();
@@ -115,6 +115,7 @@ export default function App() {
 
     const handleLoginSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoginLoading(true);
         try {
             const response = await authService.login(loginData.email, loginData.password);
             localStorage.setItem('token', response.token);
@@ -133,6 +134,9 @@ export default function App() {
             setAuthView('login');
         } catch (error) {
             alert(getErrorMessage(error));
+        }
+        finally {
+            setLoginLoading(false);
         }
     };
 
@@ -205,9 +209,18 @@ export default function App() {
                                     Forgot Password?
                                 </button>
                             </div>
-                            <button type="submit" className="w-full px-8 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg font-semibold shadow-lg transition">
+                            {/* <button type="submit" className="w-full px-8 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg font-semibold shadow-lg transition">
                                 Login
+                            </button> */}
+                            <button
+                                type="submit"
+                                className={`w-full px-8 py-3 rounded-lg font-semibold shadow-lg transition
+        ${loginLoading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'}`}
+                                disabled={loginLoading}
+                            >
+                                {loginLoading ? 'Logging in...' : 'Login'}
                             </button>
+
                         </form>
                     </>
                 );
@@ -349,10 +362,12 @@ export default function App() {
     return (
         <main className="min-h-screen bg-slate-900 flex flex-col items-center justify-center px-6 text-white">
             <h1 className="text-5xl font-extrabold mb-6 text-center drop-shadow-lg">
-                Welcome to <span className="text-blue-400">Mzatinova Demia</span>
+                Welcome to <span className="text-blue-400">Annex</span>
             </h1>
+            <span className="font-bold text-blue-300">Your knowledge marketplace</span>
             <p className="max-w-xl text-center text-lg mb-10 leading-relaxed drop-shadow-md text-slate-300">
-                Empowering secondary education learners and teachers with quality resources, interactive lessons, and a supportive community.
+
+                Annex is the marketplace where students unlock knowledge and educators turn expertise into impact, from secondary school to university and beyond.
             </p>
 
             <div className="flex space-x-6">
@@ -389,8 +404,8 @@ export default function App() {
 
                         <div className="text-center mb-4">
                             <BookOpen className="h-10 w-10 text-blue-400 mx-auto mb-2" />
-                            <h1 className="text-2xl font-bold">Mzatinova Demia</h1>
-                            <p className="text-slate-300 text-sm">Learn and teach secondary education subjects</p>
+                            <h1 className="text-2xl font-bold">Annex</h1>
+                            <p className="text-slate-300 text-sm">Your knowledge marketplace</p>
                         </div>
                         <div className="flex-1 overflow-y-auto">
                             {renderAuthContent()}
@@ -400,7 +415,7 @@ export default function App() {
             )}
 
             <footer className="mt-20 text-sm text-slate-400 opacity-80">
-                © {new Date().getFullYear()} Mzatinova Demia. All rights reserved.
+                © {new Date().getFullYear()} Annex. All rights reserved.
             </footer>
         </main>
     );
