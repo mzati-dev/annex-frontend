@@ -46,11 +46,32 @@ export default function LessonCard({
                 <p className="text-sm text-slate-400 mb-4 h-10 line-clamp-2">{lesson.description}</p>
 
                 {/* Lesson tags */}
-                <div className="flex flex-wrap gap-2 mb-4">
+                {/* <div className="flex flex-wrap gap-2 mb-4">
                     <span className="text-xs font-semibold bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full">{lesson.subject}</span>
+                     <span className="ml-2 text-slate-500">|</span>
                     <span className="text-xs font-semibold bg-slate-700 text-slate-300 px-2 py-1 rounded-full">{lesson.form}</span>
                     <span className="text-xs font-semibold bg-slate-700 text-slate-300 px-2 py-1 rounded-full">By {lesson.teacherName}</span>
+                </div> */}
+
+                {/* Lesson tags */}
+                <div className="flex justify-between items-center mb-4">
+                    {/* Left side (subject + form) */}
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full">
+                            {lesson.subject}
+                        </span>
+                        <span className="text-slate-500">|</span>
+                        <span className="text-xs font-semibold bg-slate-700 text-slate-300 px-2 py-1 rounded-full">
+                            {lesson.form}
+                        </span>
+                    </div>
+
+                    {/* Right side (teacher name) */}
+                    <span className="text-xs font-semibold bg-slate-700 text-slate-300 px-2 py-1 rounded-full">
+                        By {lesson.teacherName}
+                    </span>
                 </div>
+
 
                 {/* Duration and price */}
                 <div className="flex justify-between items-center text-sm text-slate-300 border-t border-slate-700 pt-3 mt-auto">
