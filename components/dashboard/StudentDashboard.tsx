@@ -104,13 +104,13 @@ export default function StudentDashboard() {
         }
     };
 
-    // ✅ REPLACE WITH:
+    // ✅ REPLACE WITH: SINTHANI CODE IYI KUTI AFTER CLICKING BUY IZIPITA KU CART MODEL
     // const handleBuyNow = (lesson: Lesson) => {
     //     addToCart(lesson);      // Uses existing cart system
     //     setIsCartOpen(true);    // Opens payment modal
     // };
 
-    // Handler for adding a lesson to cart and opening cart modal
+    // Handler for adding a lesson to cart and opening cart modal. CODE IYI NDI YA TEMPORARY
     const handleAddToCart = (lesson: Lesson) => {
         addToCart(lesson);
         setIsCartOpen(true);

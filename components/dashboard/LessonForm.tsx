@@ -17,7 +17,7 @@ export default function LessonForm({
     initialData
 }: {
     // === CHANGE: onSubmit now expects LessonFormData which includes videoFile ===
-    onSubmit: (formData: LessonFormData) => void | Promise<void>;
+    onSubmit: (formData: FormData) => void | Promise<void>;
     onCancel: () => void;
     initialData?: Lesson | null;
 }) {
@@ -46,32 +46,66 @@ export default function LessonForm({
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
+    // const handleSubmit = async (e: React.FormEvent) => {
+    //     e.preventDefault();
+    //     setIsLoading(true);
 
-        // === CHANGE: Prepare plain object matching LessonFormData type ===
-        const submitData: LessonFormData = {
-            title: formData.title,
-            description: formData.description,
-            subject: formData.subject,
-            form: formData.form,
-            price: Number(formData.price),
-            textContent: formData.textContent,
-            durationMinutes: formData.durationMinutes,
-            videoFile: formData.videoFile,  // include file object here
-            videoUrl: formData.videoUrl,
-        };
+    //     // === CHANGE: Prepare plain object matching LessonFormData type ===
+    //     const submitData: LessonFormData = {
+    //         title: formData.title,
+    //         description: formData.description,
+    //         subject: formData.subject,
+    //         form: formData.form,
+    //         price: Number(formData.price),
+    //         textContent: formData.textContent,
+    //         durationMinutes: formData.durationMinutes,
+    //         videoFile: formData.videoFile,  // include file object here
+    //         videoUrl: formData.videoUrl,
+    //     };
 
-        try {
-            // Call parent onSubmit passing the form data including videoFile
-            await onSubmit(submitData);
-        } catch (error) {
-            // Optional error handling here
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    //     try {
+    //         // Call parent onSubmit passing the form data including videoFile
+    //         await onSubmit(submitData);
+    //     } catch (error) {
+    //         // Optional error handling here
+    //     } finally {
+    //         setIsLoading(false);
+    //     }
+    // };
+
+    // In components/teacher/LessonForm.tsx
+
+const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    // === CHANGE: Use FormData for file uploads ===
+    const formDataPayload = new FormData();
+
+    // Append all the text-based form fields
+    formDataPayload.append('title', formData.title);
+    formDataPayload.append('description', formData.description);
+    formDataPayload.append('subject', formData.subject);
+    formDataPayload.append('form', formData.form);
+    formDataPayload.append('price', String(formData.price));
+    formDataPayload.append('textContent', formData.textContent);
+    formDataPayload.append('durationMinutes', String(formData.durationMinutes));
+    
+    // IMPORTANT: Only append the file if one was selected
+    if (formData.videoFile) {
+        formDataPayload.append('videoFile', formData.videoFile);
+    }
+
+    try {
+        // === CHANGE: Pass the FormData object to the onSubmit handler ===
+        // Your parent component will now receive and send this FormData object.
+        await onSubmit(formDataPayload); 
+    } catch (error) {
+        console.error("Failed to submit the lesson:", error);
+    } finally {
+        setIsLoading(false);
+    }
+};
 
     const inputClass = "w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none";
 

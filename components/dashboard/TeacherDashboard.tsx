@@ -92,15 +92,40 @@ export default function TeacherDashboard() {
     //     return (base % 4) + 2; // 2-5 sales demo
     // };
 
-    const handleSubmit = async (formData: Omit<Lesson, 'id' | 'teacherId' | 'teacherName' | 'createdAt'>) => {
+    // const handleSubmit = async (formData: Omit<Lesson, 'id' | 'teacherId' | 'teacherName' | 'createdAt'>) => {
+    //     if (!user) return;
+
+    //     try {
+    //         if (editingLesson) {
+    //             const updated = await teacherApi.updateLesson(editingLesson.id, formData);
+    //             updated.price = Number(updated.price || 0);
+    //             setLessons(lessons.map(l => l.id === editingLesson.id ? updated : l));
+    //         } else {
+    //             const created = await teacherApi.createLesson(formData);
+    //             created.price = Number(created.price || 0);
+    //             setLessons([created, ...lessons]);
+    //         }
+    //         setShowForm(false);
+    //         setEditingLesson(null);
+    //     } catch (err) {
+    //         console.error('Error saving lesson', err);
+    //     }
+    // };
+
+    // In components/teacher/TeacherDashboard.tsx
+
+    // Find this function:
+    const handleSubmit = async (formData: FormData) => { // <--- CHANGE THIS LINE
         if (!user) return;
 
         try {
             if (editingLesson) {
+                // The 'formData' object is now correctly passed to the API service
                 const updated = await teacherApi.updateLesson(editingLesson.id, formData);
                 updated.price = Number(updated.price || 0);
                 setLessons(lessons.map(l => l.id === editingLesson.id ? updated : l));
             } else {
+                // The 'formData' object is now correctly passed to the API service
                 const created = await teacherApi.createLesson(formData);
                 created.price = Number(created.price || 0);
                 setLessons([created, ...lessons]);
