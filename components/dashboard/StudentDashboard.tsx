@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useAppContext } from '../../context/AppContext';
-import { BookOpen, GraduationCap } from 'lucide-react';
+import { BookOpen, GraduationCap, Users } from 'lucide-react';
 import LessonCard from '../common/LessonCard';
 import StatCard from '../common/StatCard';
 import FilterSelect from '../common/FilterSelect';
@@ -141,13 +141,21 @@ export default function StudentDashboard() {
             {/* Cart Modal */}
             <CartModal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
 
-            {/* Header with stats and filters */}
+
             <div className="fixed left-0 right-0 bg-slate-900/90 backdrop-blur-md z-20 p-6 border-b border-slate-700 -mt-8">
                 <div className="flex justify-between items-center mb-6">
                     {/* <h2 className="text-3xl font-bold text-white">Teacher Dashboard</h2> */}
                     <h2 className="text-3xl font-bold text-white">
                         Welcome back, {user?.name.split(' ')[0]}!
                     </h2>
+                    <button
+                        // onClick={() => navigate('/tutors')}
+                        className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"
+                    >
+                        {/* <Users size={20} /> Example Icon */}
+                        Find a Tutor
+                    </button>
+                    {/* --- END OF BUTTON --- */}
 
                 </div>
                 <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">

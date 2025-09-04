@@ -116,15 +116,41 @@ export default function App() {
     const handleLoginSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoginLoading(true);
+
         try {
-            const response = await authService.login(loginData.email, loginData.password);
-            localStorage.setItem('token', response.token);
-            login(response.user);
-            router.replace('/dashboard'); // ✅ go straight to dashboard
+            // Step 1: Log in and get the token
+            const loginResponse = await authService.login(loginData.email, loginData.password);
+            localStorage.setItem('token', loginResponse.token);
+
+            // Step 2: Use the new token to get the FRESH user profile
+            // This ensures you always have the latest data, including the profile image.
+            const userProfile = await authService.getProfile();
+
+            // Step 3: Use the fresh profile to log the user in globally
+            login(userProfile);
+
+            // No need to call router.replace() here, as your AppContext's login function handles it
+
         } catch (error) {
             alert(getErrorMessage(error));
+        } finally {
+            // This will run whether the login succeeds or fails
+            setLoginLoading(false);
         }
     };
+
+    // const handleLoginSubmit = async (e: React.FormEvent) => {
+    //     e.preventDefault();
+    //     setLoginLoading(true);
+    //     try {
+    //         const response = await authService.login(loginData.email, loginData.password);
+    //         localStorage.setItem('token', response.token);
+    //         login(response.user);
+    //         router.replace('/dashboard'); // ✅ go straight to dashboard
+    //     } catch (error) {
+    //         alert(getErrorMessage(error));
+    //     }
+    // };
 
     const handleForgotSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

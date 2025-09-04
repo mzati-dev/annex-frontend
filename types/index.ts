@@ -1,5 +1,7 @@
 // types.ts
 
+import { TutorProfile } from "@/app/find-online-tutor/data/tutors";
+
 /**
  * User profile interface representing both teachers and students
  */
@@ -7,7 +9,9 @@ export interface UserProfile {
     id: string;             // Unique identifier for the user
     name: string;           // User's full name
     email: string;          // User's email address
+    phone: string;
     role: 'teacher' | 'student';  // User's role in the system
+    profileImageUrl?: string;
 }
 
 /**
@@ -71,7 +75,9 @@ export interface AppContextType {
     cart: CartItem[];                   // Items in shopping cart
     purchasedLessonIds: string[];       // IDs of purchased lessons (for current user)
     purchases: Purchase[];              // All purchase records in the system
+    tutors: TutorProfile[];             // NEW: All available tutors
 
+    setUser: (user: UserProfile) => void;
     // Authentication methods
     login: (user: UserProfile) => void; // Login handler
     logout: () => void;                 // Logout handler
@@ -79,6 +85,9 @@ export interface AppContextType {
     // Lesson management
     addLesson: (lesson: Lesson) => void; // Add/update lesson
     deleteLesson: (lessonId: string) => void; // NEW: Delete lesson handler
+
+    // ✅ ADD THIS SECTION FOR TUTOR MANAGEMENT
+    updateTutor: (tutorProfile: TutorProfile) => void;
 
     // Cart methods
     addToCart: (lesson: Lesson) => void; // Add to cart

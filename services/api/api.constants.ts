@@ -26,6 +26,16 @@ export const API_ENDPOINTS = {
         LESSON_RATINGS: (lessonId: string) => `/lessons/${lessonId}/ratings`,
     },
     SHARED: {
-        PROFILE: '/profile',
-    }
+        PROFILE: '/auth/profile',
+    },
+    USER: {
+        UPLOAD_AVATAR: '/users/upload-avatar',
+        GET_PROFILE: '/users/profile',
+    },
+    // --- START: NEW CODE FOR PAYMENT GATEWAY ---
+    PAYMENTS: {
+        INITIATE_MOBILE_MONEY: '/payments/initiate-mobile-money',
+        INITIATE_BANK_TRANSFER: '/payments/initiate-bank-transfer',
+    },
+    // --- END: NEW CODE FOR PAYMENT GATEWAY ---
 };
