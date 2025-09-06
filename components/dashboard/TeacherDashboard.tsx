@@ -1,7 +1,7 @@
 'use client';
 
 import { useAppContext } from '../../context/AppContext';
-import { FileText, DollarSign, Plus, ShoppingBag, Eye, Trash2, Archive, Edit, Star } from 'lucide-react';
+import { FileText, DollarSign, Plus, ShoppingBag, Eye, Trash2, Archive, Edit, Star, BarChart } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import StatCard from '../common/StatCard';
 import LessonForm from './LessonForm';
@@ -9,8 +9,10 @@ import { Lesson } from '@/types';
 import Button from '../common/Button';
 import Modal from '../common/Modal';
 import { TeacherApiService } from '@/services/api/teacher-api.service';
+import { useRouter } from 'next/navigation';
 
 export default function TeacherDashboard() {
+    const router = useRouter();
     const { user, searchTerm } = useAppContext();
     const [lessons, setLessons] = useState<Lesson[]>([]);
     const [showForm, setShowForm] = useState(false);
@@ -194,12 +196,20 @@ export default function TeacherDashboard() {
             <div className="fixed left-0 right-0 bg-slate-900/90 backdrop-blur-md z-20 p-6 border-b border-slate-700 -mt-8">
                 <div className="max-w-7xl mx-auto">
                     <div className="flex justify-between items-center mb-6">
+                        <button
+                            onClick={() => router.push('/find-online-tutor')}
+                            className="bg-sky-500 hover:bg-sky-600 cursor-pointer text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"
+                        >
+                            {/* <Users size={20} /> Example Icon */}
+                            <BarChart className="h-4 w-4 mr-2" />
+                            Tutoring Dashboard
+                        </button>
                         {/* <h2 className="text-3xl font-bold text-white">Teacher Dashboard</h2> */}
                         <h2 className="text-3xl font-bold text-white">
                             Welcome back, {user?.name.split(' ')[0]}!
                         </h2>
-                        <Button onClick={handleAddNew}>
-                            <Plus className="h-5 w-5 mr-2" />
+                        <Button className="cursor-pointer" onClick={handleAddNew}>
+                            <Plus className="h-5 w-5 mr-2 cursor-pointer" />
                             Create New Lesson
                         </Button>
                     </div>
@@ -271,16 +281,16 @@ export default function TeacherDashboard() {
 
 
                                         <div className="mt-3 flex justify-between border-t border-slate-700 pt-3">
-                                            <button onClick={() => handleViewStudents(lesson.id)} className="text-blue-400 hover:text-blue-300 p-1">
+                                            <button onClick={() => handleViewStudents(lesson.id)} className="text-blue-400 hover:text-blue-300 p-1 cursor-pointer">
                                                 <Eye className="h-5 w-5" />
                                             </button>
-                                            <button onClick={() => handleEdit(lesson)} className="text-yellow-400 hover:text-yellow-300 p-1">
+                                            <button onClick={() => handleEdit(lesson)} className="text-yellow-400 hover:text-yellow-300 p-1 cursor-pointer">
                                                 <Edit className="h-5 w-5" />
                                             </button>
-                                            <button onClick={() => handleArchive(lesson.id)} className="text-purple-400 hover:text-purple-300 p-1">
+                                            <button onClick={() => handleArchive(lesson.id)} className="text-purple-400 hover:text-purple-300 p-1 cursor-pointer">
                                                 <Archive className="h-5 w-5" />
                                             </button>
-                                            <button onClick={() => setConfirmDeleteId(lesson.id)} className="text-red-400 hover:text-red-300 p-1">
+                                            <button onClick={() => setConfirmDeleteId(lesson.id)} className="text-red-400 hover:text-red-300 p-1 cursor-pointer">
                                                 <Trash2 className="h-5 w-5" />
                                             </button>
                                         </div>

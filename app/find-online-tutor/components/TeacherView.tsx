@@ -23,6 +23,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ profile, onSave, onCancel
     const [name, setName] = useState(profile?.name || '');
     const [bio, setBio] = useState(profile?.bio || '');
     const [subjects, setSubjects] = useState(profile?.subjects?.join(', ') || '');
+    const [monthlyRate, setMonthlyRate] = useState(profile?.monthlyRate || '');
 
     useEffect(() => {
         if (profile) {
@@ -30,6 +31,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ profile, onSave, onCancel
             setName(profile.name || '');
             setBio(profile.bio || '');
             setSubjects(profile.subjects?.join(', ') || '');
+            setMonthlyRate(profile.monthlyRate || '');
         }
     }, [profile]);
 
@@ -43,6 +45,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ profile, onSave, onCancel
             name,
             bio,
             subjects: subjects.split(',').map(s => s.trim()).filter(Boolean),
+            monthlyRate: Number(monthlyRate),
         });
     };
 
@@ -101,6 +104,17 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ profile, onSave, onCancel
                         className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
                     <p className="text-xs text-slate-500 mt-1">Separate subjects with a comma.</p>
+                </div>
+                <div>
+                    <label htmlFor="monthlyRate" className="block text-sm font-medium text-slate-300 mb-1">Your Monthly Rate (in MWK)</label>
+                    <input
+                        type="number"
+                        id="monthlyRate"
+                        value={monthlyRate}
+                        onChange={(e) => setMonthlyRate(e.target.value)}
+                        placeholder="e.g., 50000"
+                        className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
                 </div>
             </div>
             <div className="flex items-center gap-4 mt-6">
@@ -172,9 +186,23 @@ const TeacherProfileCard: React.FC<TeacherProfileCardProps> = ({ tutor, onEditRe
                         </span>
                     ))}
                 </div>
+
+                {tutor.monthlyRate ? (
+                    <div className="border-t border-slate-700 pt-4 mb-6">
+                        <div className="flex items-center gap-2 text-sm text-slate-300">
+                            {/* <DollarSign className="h-5 w-5 text-green-400" /> */}
+                            <span className="font-semibold text-white">
+                                <span className="h-5 w-5 text-green-400">MWK </span>{tutor.monthlyRate.toLocaleString()}
+                            </span>
+                            <span className="text-slate-400">
+                                monthly / subject
+                            </span>
+                        </div>
+                    </div>
+                ) : null} {/* If there's no rate, show nothing */}
                 <button
                     onClick={onEditRequest}
-                    className="w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold shadow-lg transition flex items-center justify-center">
+                    className="w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 cursor-pointer  rounded-lg font-semibold shadow-lg transition flex items-center justify-center">
                     <Edit className="h-4 w-4 mr-2" />
                     Edit My Public Profile
                 </button>
@@ -312,6 +340,7 @@ export default function TeacherTutorDashboard() {
         title: 'Mr.',
         bio: '',
         subjects: [],
+        monthlyRate: null
     };
 
 
@@ -324,7 +353,11 @@ export default function TeacherTutorDashboard() {
                         <span className={`font-semibold ${tutorProfile?.isAvailableForNewStudents ? 'text-green-400' : 'text-slate-400'}`}>
                             {tutorProfile?.isAvailableForNewStudents ? 'Available for new students' : 'Not currently available'}
                         </span>
-                        <button onClick={handleAvailabilityToggle} disabled={!tutorProfile}>
+                        <button
+                            onClick={handleAvailabilityToggle}
+                            disabled={!tutorProfile}
+                            className="cursor-pointer disabled:cursor-not-allowed"
+                        >
                             <ToggleRight className={`h-10 w-10 transition-colors ${tutorProfile?.isAvailableForNewStudents ? 'text-green-500' : 'text-slate-600 rotate-180'}`} />
                         </button>
                     </div>

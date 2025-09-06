@@ -3,7 +3,7 @@ import { API_BASE_URL } from './api.constants';
 
 export class BaseApiService {
     protected async request<T>(
-        method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+        method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
         endpoint: string,
         data?: any
     ): Promise<T> {
@@ -54,6 +54,12 @@ export class BaseApiService {
     protected post<T>(endpoint: string, data: any): Promise<T> {
         return this.request('POST', endpoint, data);
     }
+
+    // --- ADD THIS METHOD ---
+    protected patch<T>(endpoint: string, data: any): Promise<T> {
+        return this.request('PATCH', endpoint, data);
+    }
+    // --- END OF NEW METHOD ---
 
     protected put<T>(endpoint: string, data: any): Promise<T> {
         return this.request('PUT', endpoint, data);

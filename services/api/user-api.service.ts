@@ -2,8 +2,15 @@
 
 import { BaseApiService } from './base-api.service';
 import { API_ENDPOINTS } from './api.constants';
-import { UserProfile as User } from '@/types';// Assuming your User type is in a central types file
+import { UserProfile as User, UserProfile } from '@/types';// Assuming your User type is in a central types file
 
+
+type UpdateProfilePayload = {
+    name: string;
+    phone: string;
+    dob: string;
+    gender: string;
+};
 export class UserApiService extends BaseApiService {
     /**
      * Uploads a user's profile picture.
@@ -17,5 +24,12 @@ export class UserApiService extends BaseApiService {
 
         // Use the inherited 'post' method. It already handles FormData.
         return this.post<User>(API_ENDPOINTS.USER.UPLOAD_AVATAR, formData);
+    }
+
+
+    public async updateProfile(data: UpdateProfilePayload): Promise<UserProfile> {
+        // We use 'request' here because your BaseApiService doesn't have a 'patch' helper.
+        // PATCH is the correct method for partial updates.
+        return this.request<UserProfile>('PATCH', API_ENDPOINTS.USER.UPDATE_PROFILE, data);
     }
 }

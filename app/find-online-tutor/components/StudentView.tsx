@@ -1,12 +1,16 @@
 // app/find-online-tutor/page.tsx (Student Dashboard)
 'use client';
 
-import { Star, MessageSquare } from 'lucide-react';
+import { Star, MessageSquare, DollarSign } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
 import { API_BASE_URL } from '@/services/api/api.constants';
+import { useState } from 'react';
+import ContactModal from './ContactModal';
 
 
 const TutorCard = ({ tutor }: { tutor: any }) => {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
     const fullAvatarUrl = tutor.avatar ? `${API_BASE_URL}${tutor.avatar}` : null;
 
     // 👇 1. Get the surname from the full name
@@ -14,43 +18,71 @@ const TutorCard = ({ tutor }: { tutor: any }) => {
     const surname = nameParts.length > 1 ? nameParts[nameParts.length - 1] : tutor.name;
 
     return (
-        <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-1 transition-transform duration-300">
-            <div className="p-6">
-                <div className="flex items-center mb-4">
-                    {fullAvatarUrl ? (
-                        <img
-                            src={fullAvatarUrl}
-                            alt={tutor.name}
-                            className="h-16 w-16 rounded-full object-cover flex-shrink-0 mr-4"
-                        />
-                    ) : (
-                        <div className="h-16 w-16 rounded-full bg-blue-600 flex items-center justify-center text-2xl font-bold flex-shrink-0 mr-4">
-                            {tutor.name?.split(' ').pop()?.[0] || '?'}
-                        </div>
-                    )}
+        <>
+            <div className="bg-slate-800 border border-slate-700  flex rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-1 transition-transform duration-300">
+                <div className="p-6 flex flex-col h-full">
+                    <div className="flex items-center mb-4">
+                        {fullAvatarUrl ? (
+                            <img
+                                src={fullAvatarUrl}
+                                alt={tutor.name}
+                                className="h-16 w-16 rounded-full object-cover flex-shrink-0 mr-4"
+                            />
+                        ) : (
+                            <div className="h-16 w-16 rounded-full bg-blue-600 flex items-center justify-center text-2xl font-bold flex-shrink-0 mr-4">
+                                {tutor.name?.split(' ').pop()?.[0] || '?'}
+                            </div>
+                        )}
 
-                    <div>
-                        {/* 👇 2. Display the title and surname */}
-                        <h3 className="text-xl font-bold text-white">{`${tutor.title} ${surname}`}</h3>
-                        <div className="flex items-center text-sm text-yellow-400 mt-1">
-                            <Star className="h-4 w-4 fill-current mr-1" />
-                            <span>{tutor.rating.toFixed(1)} ({tutor.reviews} reviews)</span>
+                        <div>
+                            {/* 👇 2. Display the title and surname */}
+                            <h3 className="text-xl font-bold text-white">{`${tutor.title} ${surname}`}</h3>
+                            <div className="flex items-center text-sm text-yellow-400 mt-1">
+                                <Star className="h-4 w-4 fill-current mr-1" />
+                                <span>{tutor.rating.toFixed(1)} ({tutor.reviews} reviews)</span>
+                            </div>
                         </div>
                     </div>
+                    {/* Replace h-20 overflow-hidden with a class like line-clamp-3. */}
+                    <p className="text-slate-400 text-sm mb-4 line-clamp-3">{tutor.bio}</p>
+                    <div className='mt-auto'>
+                        <div className="flex flex-wrap gap-2 mb-6">
+                            {tutor.subjects.map((subject: string) => (
+                                <span key={subject} className="bg-slate-700 text-slate-300 text-xs font-medium px-2.5 py-1 rounded-full">{subject}</span>
+                            ))}
+                        </div>
+
+                        {/* 👇 THIS IS THE BLOCK YOU NEED TO ADD 👇 */}
+                        {tutor.monthlyRate ? (
+                            <div className="border-t border-slate-700 pt-4 my-4">
+                                <div className="flex justify-center items-center gap-2 text-slate-300">
+                                    {/* <DollarSign className="h-5 w-5 text-green-400" /> */}
+                                    <span className="text-sm font-bold text-white">
+                                        <span className="h-5 w-5 text-green-400">MWK </span>{tutor.monthlyRate.toLocaleString()}
+                                    </span>
+                                    <span className="text-slate-400">monthly / subject</span>
+                                </div>
+                            </div>
+                        ) : null}
+
+                        {/* 👇 3. (Optional) Update the button text */}
+                        <button
+                            onClick={() => setIsModalOpen(true)}
+                            className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 cursor-pointer  rounded-lg font-semibold shadow-lg transition flex items-center justify-center">
+                            <MessageSquare className="h-4 w-4 mr-2" />
+                            Contact {`${tutor.title} ${surname}`}
+                        </button>
+                    </div>
                 </div>
-                <p className="text-slate-400 text-sm mb-4 h-20 overflow-hidden">{tutor.bio}</p>
-                <div className="flex flex-wrap gap-2 mb-6">
-                    {tutor.subjects.map((subject: string) => (
-                        <span key={subject} className="bg-slate-700 text-slate-300 text-xs font-medium px-2.5 py-1 rounded-full">{subject}</span>
-                    ))}
-                </div>
-                {/* 👇 3. (Optional) Update the button text */}
-                <button className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold shadow-lg transition flex items-center justify-center">
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Contact {`${tutor.title} ${surname}`}
-                </button>
             </div>
-        </div>
+            {/* 👇 4. Conditionally render the modal */}
+            {isModalOpen && (
+                <ContactModal
+                    tutor={tutor}
+                    onClose={() => setIsModalOpen(false)}
+                />
+            )}
+        </>
     );
 };
 

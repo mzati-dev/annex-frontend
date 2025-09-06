@@ -13,6 +13,7 @@ export interface TutorProfile {
     subjects: string[];
     isAvailableForNewStudents: boolean;
     whatsappNumber?: string;
+    monthlyRate: number | null;
 }
 
 // Defines the shape of the data coming from the editor form
@@ -22,6 +23,7 @@ export interface ProfileFormData {
     bio: string;
     subjects: string[];
     whatsappNumber?: string;
+    monthlyRate: number | null;
 }
 
 // This is now our single, central list of tutors
@@ -36,7 +38,8 @@ export const mockTutors: TutorProfile[] = [
         reviews: 120,
         bio: 'Experienced and passionate Biology and Chemistry tutor with over 10 years of teaching experience. I focus on making complex topics easy to understand.',
         subjects: ['Biology', 'Chemistry', 'Physics'],
-        isAvailableForNewStudents: true
+        isAvailableForNewStudents: true,
+        monthlyRate: null,
     },
     {
         id: 't2',
@@ -48,7 +51,8 @@ export const mockTutors: TutorProfile[] = [
         reviews: 85,
         bio: 'I help students conquer Mathematics with simple and effective strategies. Let\'s make math fun!',
         subjects: ['Mathematics', 'Statistics'],
-        isAvailableForNewStudents: true
+        isAvailableForNewStudents: true,
+        monthlyRate: null,
     },
     {
         id: 't3',
@@ -60,7 +64,8 @@ export const mockTutors: TutorProfile[] = [
         reviews: 85,
         bio: 'I help students conquer Mathematics with simple and effective strategies. Let\'s make math fun!',
         subjects: ['Mathematics', 'Statistics'],
-        isAvailableForNewStudents: true
+        isAvailableForNewStudents: true,
+        monthlyRate: null,
     },
 
     {
@@ -73,7 +78,8 @@ export const mockTutors: TutorProfile[] = [
         reviews: 85,
         bio: 'I help students conquer Mathematics with simple and effective strategies. Let\'s make math fun!',
         subjects: ['Mathematics', 'Statistics'],
-        isAvailableForNewStudents: true
+        isAvailableForNewStudents: true,
+        monthlyRate: null,
     }
 
 ];

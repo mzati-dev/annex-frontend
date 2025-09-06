@@ -5,7 +5,8 @@ export const API_ENDPOINTS = {
         LOGIN: '/auth/login',
         REGISTER: '/auth/register',
         REFRESH: '/auth/refresh',
-        FORGOT_PASSWORD: '/auth/forgot-password'
+        FORGOT_PASSWORD: '/auth/forgot-password',
+        CHANGE_PASSWORD: '/auth/change-password'
     },
     STUDENT: {
         LESSONS: '/student/lessons',
@@ -31,6 +32,7 @@ export const API_ENDPOINTS = {
     USER: {
         UPLOAD_AVATAR: '/users/upload-avatar',
         GET_PROFILE: '/users/profile',
+        UPDATE_PROFILE: '/users/profile',
     },
     // --- START: NEW CODE FOR PAYMENT GATEWAY ---
     PAYMENTS: {

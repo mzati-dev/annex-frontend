@@ -62,57 +62,59 @@ export default function SettingsPage() {
             <main className="min-h-screen bg-slate-900 text-white p-4 sm:p-6 md:p-8">
                 <div className="max-w-4xl mx-auto">
                     <h1 className="text-4xl font-bold mb-10">Settings</h1>
-                    <div className="space-y-12">
-                        {/* Account Settings */}
-                        <SettingsCategory title="Account">
-                            <SettingItem
-                                icon={UserCircle}
-                                title="Edit Profile"
-                                description="Update your name, bio, and personal information."
-                                href="/account" // Links to the existing account page
-                            />
-                            <SettingItem
-                                icon={ShieldCheck}
-                                title="Password & Security"
-                                description="Change your password and manage account security."
-                                href="/settings/security"
-                            />
-                        </SettingsCategory>
-
-                        {/* Teacher-Only Settings */}
-                        {user.role === 'teacher' && (
-                            <SettingsCategory title="Payments">
+                    <>
+                        <div className="space-y-12">
+                            {/* Account Settings */}
+                            <SettingsCategory title="Account">
                                 <SettingItem
-                                    icon={CreditCard}
-                                    title="Payout Details"
-                                    description="Manage your bank or mobile money details for receiving payments."
-                                    href="/settings/payouts"
+                                    icon={UserCircle}
+                                    title="Edit Profile"
+                                    description="Update your name, bio, and personal information."
+                                    href="/account" // Links to the existing account page
+                                />
+                                <SettingItem
+                                    icon={ShieldCheck}
+                                    title="Password & Security"
+                                    description="Change your password and manage account security."
+                                    href="/settings/security"
                                 />
                             </SettingsCategory>
-                        )}
 
-                        {/* Application Settings */}
-                        <SettingsCategory title="Application">
-                            <SettingItem
-                                icon={Bell}
-                                title="Notifications"
-                                description="Manage your email and push notification preferences."
-                                href="/settings/notifications"
-                            />
-                            <SettingItem
-                                icon={Palette}
-                                title="Theme & Appearance"
-                                description="Customize the look and feel of the application."
-                                href="/settings/appearance"
-                            />
-                            <SettingItem
-                                icon={Globe}
-                                title="Language & Region"
-                                description="Set your preferred language and region."
-                                href="/settings/language"
-                            />
-                        </SettingsCategory>
-                    </div>
+                            {/* Teacher-Only Settings */}
+                            {user.role === 'teacher' && (
+                                <SettingsCategory title="Payments">
+                                    <SettingItem
+                                        icon={CreditCard}
+                                        title="Payout Details"
+                                        description="Manage your bank or mobile money details for receiving payments."
+                                        href="/settings/payouts"
+                                    />
+                                </SettingsCategory>
+                            )}
+
+                            {/* Application Settings */}
+                            <SettingsCategory title="Application">
+                                <SettingItem
+                                    icon={Bell}
+                                    title="Notifications"
+                                    description="Manage your email and push notification preferences."
+                                    href="/settings/notifications"
+                                />
+                                <SettingItem
+                                    icon={Palette}
+                                    title="Theme & Appearance"
+                                    description="Customize the look and feel of the application."
+                                    href="/settings/appearance"
+                                />
+                                <SettingItem
+                                    icon={Globe}
+                                    title="Language & Region"
+                                    description="Set your preferred language and region."
+                                    href="/settings/language"
+                                />
+                            </SettingsCategory>
+                        </div>
+                    </>
                 </div>
             </main>
         </>

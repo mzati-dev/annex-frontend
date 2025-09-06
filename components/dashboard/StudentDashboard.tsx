@@ -10,10 +10,11 @@ import LessonDetailView from './LessonDetailView';
 import CartModal from '../common/CartModal';
 import { Lesson } from '@/types';
 import { StudentApiService } from '@/services/api/student-api.service';
+import { useRouter } from 'next/navigation';
 
 export default function StudentDashboard() {
+    const router = useRouter();
     const { user, searchTerm, addToCart } = useAppContext();
-
     const [lessons, setLessons] = useState<Lesson[]>([]);
     const [purchasedLessonIds, setPurchasedLessonIds] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -149,11 +150,11 @@ export default function StudentDashboard() {
                         Welcome back, {user?.name.split(' ')[0]}!
                     </h2>
                     <button
-                        // onClick={() => navigate('/tutors')}
-                        className="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"
+                        onClick={() => router.push('/find-online-tutor')}
+                        className="bg-sky-500 hover:bg-sky-600 cursor-pointer  text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"
                     >
                         {/* <Users size={20} /> Example Icon */}
-                        Find a Tutor
+                        Find Online Tutor
                     </button>
                     {/* --- END OF BUTTON --- */}
 

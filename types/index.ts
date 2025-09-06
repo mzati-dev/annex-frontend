@@ -12,6 +12,8 @@ export interface UserProfile {
     phone: string;
     role: 'teacher' | 'student';  // User's role in the system
     profileImageUrl?: string;
+    dob?: string;
+    gender?: string;
 }
 
 /**
@@ -58,6 +60,7 @@ export interface Lesson {
     averageRating?: number; // Calculated average rating
     salesCount?: number; // Add this line
     purchases?: Purchase[]; // Optional: Add if you want direct access to purchases
+    teacherTitle: string;
 }
 
 /**
@@ -130,7 +133,8 @@ export const MOCK_LESSONS: Lesson[] = [
                 createdAt: new Date('2023-01-15').toISOString()
             }
         ],
-        averageRating: 5
+        averageRating: 5,
+        teacherTitle: ''
     },
     {
         id: '2',
@@ -157,7 +161,8 @@ export const MOCK_LESSONS: Lesson[] = [
                 createdAt: new Date('2023-03-10').toISOString()
             }
         ],
-        averageRating: 4.5
+        averageRating: 4.5,
+        teacherTitle: ''
     },
     {
         id: '3',
@@ -173,7 +178,8 @@ export const MOCK_LESSONS: Lesson[] = [
         textContent: 'Macbeth is a tragedy by William Shakespeare about a Scottish general who, spurred by a prophecy, murders the king to seize the throne.',
         durationMinutes: 35,
         ratings: [],
-        averageRating: 0
+        averageRating: 0,
+        teacherTitle: ''
     },
 ];
 // // types.ts

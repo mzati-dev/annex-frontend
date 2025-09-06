@@ -27,6 +27,15 @@ export default function LessonCard({
     onEdit
 }: LessonCardProps) {
     const { user } = useAppContext();
+    const nameParts = lesson.teacherName?.split(' ') || [];
+    let formattedTeacherName = lesson.teacherName; // Default to the full name
+
+    // If there is a first and last name, format it as "J. Banda"
+    if (nameParts.length > 1) {
+        const firstNameInitial = nameParts[0][0]; // Gets the first letter of the first name
+        const surname = nameParts[nameParts.length - 1]; // Gets the last name
+        formattedTeacherName = `${firstNameInitial}. ${surname}`;
+    }
 
     return (
         <div className="bg-slate-800/50 border border-slate-700 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-blue-500/50 hover:-translate-y-1 flex flex-col">
@@ -68,7 +77,7 @@ export default function LessonCard({
 
                     {/* Right side (teacher name) */}
                     <span className="text-xs font-semibold bg-slate-700 text-slate-300 px-2 py-1 rounded-full">
-                        By {lesson.teacherName}
+                        By {formattedTeacherName}
                     </span>
                 </div>
 
@@ -80,7 +89,7 @@ export default function LessonCard({
                         <span>{lesson.durationMinutes} min</span>
                     </div>
                     <span className="text-xl font-bold text-white">
-                        MWK {(typeof lesson.price === 'number' ? lesson.price : Number(lesson.price) || 0).toFixed(2)}
+                        <span className="h-5 w-5 text-green-400">MWK </span>{(typeof lesson.price === 'number' ? lesson.price : Number(lesson.price) || 0).toFixed(2)}
                     </span>
 
                 </div>
@@ -98,14 +107,14 @@ export default function LessonCard({
                             <Button
                                 onClick={() => onAddToCart?.(lesson)}
                                 variant="secondary"
-                                className="flex-1"
+                                className="flex-1 cursor-pointer "
                             >
-                                <ShoppingCart className="h-4 w-4 mr-2" />
+                                <ShoppingCart className="h-4 w-4 mr-2 cursor-pointer " />
                                 Add to Cart
                             </Button>
                             <Button
                                 onClick={() => onBuyNow?.(lesson)}
-                                className="flex-1"
+                                className="flex-1 cursor-pointer "
                             >
                                 Buy Now
                             </Button>

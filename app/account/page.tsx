@@ -2,10 +2,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAppContext } from '../../context/AppContext';
-import { User, Mail, Phone, Edit, Users } from 'lucide-react';
+import { User, Mail, Phone, Edit, Users, CalendarDays, PersonStanding } from 'lucide-react';
 import Header from '@/components/common/Header';
 import { userApiService } from '@/services/api/api';
 import { API_BASE_URL } from '@/services/api/api.constants';
+
 
 // Typed helper component
 const ProfileDetail = ({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | undefined }) => (
@@ -26,6 +27,52 @@ export default function AccountPage() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [status, setStatus] = useState('');
+    const [isEditing, setIsEditing] = useState(false);
+    const [formData, setFormData] = useState({
+        name: user?.name,
+        phone: user?.phone || '',
+        dob: user?.dob ? user.dob.slice(0, 10) : '',
+        gender: user?.gender || '',
+    });
+
+    // REPLACE your old handleProfileUpdate function with this one
+
+    const handleProfileUpdate = async () => {
+        if (!user) return; // Guard against null user
+
+        // 1. We still do this check to make sure the name is not empty.
+        if (!formData.name) {
+            setStatus('Name cannot be empty.');
+            return; // Stop the function
+        }
+
+        // 2. THIS IS THE FIX: Create a new object that matches the required type.
+        const payload = {
+            name: formData.name, // After the check above, TypeScript knows this is a string.
+            phone: formData.phone,
+            dob: formData.dob,
+            gender: formData.gender,
+        };
+
+        setStatus('Saving...');
+        try {
+            // 3. We send the new, safe 'payload' object to the API function.
+            const updatedProfile = await userApiService.updateProfile(payload);
+
+            if (setUser) {
+                setUser({ ...user, ...updatedProfile });
+            }
+
+            setStatus('Profile updated successfully!');
+            setIsEditing(false);
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            setStatus(error instanceof Error ? error.message : 'Failed to update profile.');
+        }
+    };
+
+
+
 
     // 2. Add the correct event type for the 'e' parameter
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,18 +174,97 @@ export default function AccountPage() {
                         <div className="p-8">
                             <h3 className="text-xl font-semibold text-slate-200 mb-4">Personal Information</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
-                                <ProfileDetail icon={User} label="Full Name" value={user.name} />
+                                {isEditing ? (
+                                    <>
+                                        <div className="py-4 border-b border-slate-700">
+                                            <label className="text-sm text-slte-400">Full Name</label>
+                                            <input
+                                                type="text"
+                                                value={formData.name}
+                                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                                className="w-full bg-slate-700 p-2 rounded mt-1 text-white"
+                                            />
+                                        </div>
+
+                                        <div className="py-4 border-b border-slate-700">
+                                            <label className="text-sm text-slte-400">Phone Number</label>
+                                            <input
+                                                type="tel"
+                                                value={formData.phone}
+                                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                                className="w-full bg-slate-700 p-2 rounded mt-1 text-white"
+                                            />
+                                        </div>
+
+                                        <div className="py-4 border-b border-slate-700">
+                                            <label className="text-sm text-slte-400">Date of Birth</label>
+                                            <input
+                                                type="date"
+                                                value={formData.dob}
+                                                onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+                                                className="w-full bg-slate-700 p-2 rounded mt-1 text-white"
+                                            />
+                                        </div>
+
+                                        <div className="py-4 border-b border-slate-700">
+                                            <label className="text-sm text-slte-400">Gender</label>
+                                            <select
+
+                                                value={formData.gender}
+                                                onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                                                className="w-full bg-slate-700 p-2 rounded mt-1 text-white"
+                                            >
+                                                <option value="">Select Gender</option>
+                                                <option value="male">Male</option>
+                                                <option value="female">Female</option>
+                                                <option value="prefer-not-to-say">Prefer not to say</option>
+                                            </select>
+                                        </div>
+
+                                    </>
+                                ) : (
+                                    <>
+                                        <ProfileDetail icon={User} label="Full Name" value={user.name} />
+                                        <ProfileDetail icon={Phone} label="Phone Number" value={user.phone} />
+                                        <ProfileDetail icon={CalendarDays} label="Date of Birth" value={user.dob?.slice(0, 10)} />
+                                        <ProfileDetail icon={PersonStanding} label="Gender" value={user.gender} />
+                                    </>
+                                )}
+
                                 <ProfileDetail icon={Mail} label="Email Address" value={user.email} />
-                                <ProfileDetail icon={Phone} label="Phone Number" value={user.phone} />
+
                                 <ProfileDetail icon={Users} label="Role" value={formattedRole} />
+
                             </div>
                         </div>
 
                         <div className="p-6 bg-slate-900/50 border-t border-slate-700 flex justify-end">
-                            <button className="flex items-center justify-center px-6 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg font-semibold shadow-lg transition">
-                                <Edit className="h-5 w-5 mr-2" />
-                                Edit Profile
-                            </button>
+                            {isEditing ? (
+                                <>
+                                    <button
+                                        onClick={() => setIsEditing(false)}
+                                        className="px-6 py-3 bg-slate-600 hover:bg-slate-500 rounded-lg font-semibold transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleProfileUpdate}
+                                        className="flex items-center justify-center px-6 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg font-semibold transition"
+                                    >
+                                        Save Changes
+                                    </button>
+                                </>
+                            ) : (
+                                <button
+                                    onClick={() => setIsEditing(true)}
+                                    className="flex items-center justify-center px-6 py-3 bg-blue-500 hover:bg-blue-600 rounded-lg font-semibold shadow-lg transition"
+                                >
+                                    <Edit className="h-5 w-5 mr-2" />
+                                    Edit Profile
+                                </button>
+                            )}
+
+
                         </div>
                     </div>
                 </div>

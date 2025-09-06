@@ -38,6 +38,13 @@ export class AuthApiService extends BaseApiService {
     async getProfile(): Promise<UserProfile> {
         return this.get<UserProfile>(API_ENDPOINTS.SHARED.PROFILE);
     }
+
+    // Add this method to your AuthApiService class on the frontend
+
+    public async changePassword(data: { currentPassword: string, newPassword: string }): Promise<any> {
+        // Assuming your API endpoint constants are set up
+        return this.patch(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, data);
+    }
 }
 
 // import { API_ENDPOINTS } from "./api/api.constants";
