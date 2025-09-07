@@ -2,6 +2,36 @@
 
 import { TutorProfile } from "@/app/find-online-tutor/data/tutors";
 
+
+export interface Notification {
+    id: string;
+    type: string;
+    title: string;
+    description: string;
+    isRead: boolean;
+    createdAt: string; // This will be an ISO date string from the backend
+}
+
+export interface Message {
+    id: string;
+    content: string;
+    timestamp: string; // This will be an ISO date string
+    author: UserProfile;
+    conversation: {
+        id: string;
+    };
+}
+
+/**
+ * Conversation interface for chat
+ */
+export interface Conversation {
+    id: string;
+    createdAt: string; // This will be an ISO date string
+    updatedAt: string; // This will be an ISO date string
+    participants: UserProfile[];
+}
+
 /**
  * User profile interface representing both teachers and students
  */
@@ -79,6 +109,11 @@ export interface AppContextType {
     purchasedLessonIds: string[];       // IDs of purchased lessons (for current user)
     purchases: Purchase[];              // All purchase records in the system
     tutors: TutorProfile[];             // NEW: All available tutors
+    isChatOpen: boolean;
+    activeChatId: string | null;
+    openChatWithUser: (participantId: string) => Promise<void>;
+    openChatWithTutor: (tutorId: string) => Promise<void>; // ADD THIS
+    closeChat: () => void;
 
     setUser: (user: UserProfile) => void;
     // Authentication methods

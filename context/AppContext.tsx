@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { useRouter } from 'next/navigation';
 import { Lesson, UserProfile, CartItem, AppContextType, MOCK_LESSONS, Purchase } from '../types';
 import { TutorProfile } from '@/app/find-online-tutor/data/tutors';
+import { chatApiService } from '@/services/api/api';
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -18,6 +19,57 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const [toast, setToast] = useState<{ message: string; id: number } | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [tutors, setTutors] = useState<TutorProfile[]>([]);
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [activeChatId, setActiveChatId] = useState<string | null>(null);
+
+
+
+    // --- ADD THESE NEW FUNCTIONS ---
+    const openChatWithUser = async (participantId: string) => {
+        try {
+            // This calls your backend to create or find the conversation
+            const conversation = await chatApiService.createConversation(participantId);
+            setActiveChatId(conversation.id);
+            setIsChatOpen(true);
+        } catch (error) {
+            console.error("Failed to start conversation", error);
+            // Optionally show a toast message here
+        }
+    };
+
+    // ADD THIS NEW FUNCTION RIGHT HERE:
+    // const openChatWithTutor = async (tutorId: string) => {
+    //     try {
+    //         // This calls your backend to create or find the conversation with a tutor
+    //         const conversation = await chatApiService.createConversation(tutorId);
+    //         setActiveChatId(conversation.id);
+    //         setIsChatOpen(true);
+    //     } catch (error) {
+    //         console.error("Failed to start conversation with tutor", error);
+    //         // Optionally show a toast message here
+    //     }
+    // };
+
+    // AppContext.tsx
+
+    const openChatWithTutor = async (tutorId: string) => {
+        try {
+            // This still creates the conversation in the backend, which is good.
+            await chatApiService.createConversation(tutorId);
+
+            // ✅ THE FIX: Use the tutor's ID to identify the active chat.
+            setActiveChatId(tutorId);
+            setIsChatOpen(true);
+        } catch (error) {
+            console.error("Failed to start conversation with tutor", error);
+            // Optionally show a toast message here to inform the user of an error
+        }
+    };
+
+    const closeChat = () => {
+        setIsChatOpen(false);
+        setActiveChatId(null);
+    };
 
     // --- CORRECTED TUTOR LOADING LOGIC ---
     // This useEffect runs once on startup to load ALL tutor profiles from localStorage.
@@ -184,7 +236,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         rateLesson,
         tutors, // The corrected list of all tutors
         updateTutor,
-        setUser
+        setUser,
+        isChatOpen,
+        activeChatId,
+        openChatWithUser,
+        openChatWithTutor,
+        closeChat,
 
     };
 

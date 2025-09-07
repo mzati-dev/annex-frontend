@@ -6,8 +6,8 @@ import { BookOpen, ShoppingCart, ChevronDown, ChevronUp, Search, ExternalLink, F
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import NotificationScreen from '@/app/find-online-tutor/components/NotificationScreen';
-import ChatScreen from '@/app/find-online-tutor/components/ContactModal';
+import NotificationScreen from '@/components/communication/NotificationScreen';
+import ChatScreen from '@/components/communication/ChatScreen';
 
 export default function Header({ onCartClick }: { onCartClick?: () => void }) {
     const { user, logout, cart, searchTerm, setSearchTerm } = useAppContext();

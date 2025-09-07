@@ -40,4 +40,16 @@ export const API_ENDPOINTS = {
         INITIATE_BANK_TRANSFER: '/payments/initiate-bank-transfer',
     },
     // --- END: NEW CODE FOR PAYMENT GATEWAY ---
+
+    NOTIFICATIONS: {
+        GET_ALL: '/notifications',
+        MARK_AS_READ: (id: string) => `/notifications/${id}/read`,
+        MARK_ALL_AS_READ: '/notifications/mark-all-as-read',
+    },
+
+    CHAT: {
+        GET_CONVERSATIONS: '/chat/conversations',
+        GET_MESSAGES: (conversationId: string) => `/chat/conversations/${conversationId}/messages`,
+        CREATE_CONVERSATION: '/chat/conversations',
+    },
 };
