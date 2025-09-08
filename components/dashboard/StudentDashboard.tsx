@@ -94,27 +94,27 @@ export default function StudentDashboard() {
 
     // ❌ DELETE this version (direct purchase on button click):
     // // Handler for buying a lesson immediately
-    const handleBuyNow = async (lesson: Lesson) => {
-        try {
-            await studentService.purchaseLessons([{ lessonId: lesson.id }]);
-            setPurchasedLessonIds((prev) => [...prev, lesson.id]);
-            // Optionally show success notification here
-        } catch (err) {
-            console.error('Purchase failed:', err);
-            // Optionally show error notification here
-        }
-    };
+    // const handleBuyNow = async (lesson: Lesson) => {
+    //     try {
+    //         await studentService.purchaseLessons([{ lessonId: lesson.id }]);
+    //         setPurchasedLessonIds((prev) => [...prev, lesson.id]);
+    //         // Optionally show success notification here
+    //     } catch (err) {
+    //         console.error('Purchase failed:', err);
+    //         // Optionally show error notification here
+    //     }
+    // };
 
     // ✅ REPLACE WITH: SINTHANI CODE IYI KUTI AFTER CLICKING BUY IZIPITA KU CART MODEL
-    // const handleBuyNow = (lesson: Lesson) => {
-    //     addToCart(lesson);      // Uses existing cart system
-    //     setIsCartOpen(true);    // Opens payment modal
-    // };
+    const handleBuyNow = (lesson: Lesson) => {
+        addToCart(lesson);      // Uses existing cart system
+        setIsCartOpen(true);    // Opens payment modal
+    };
 
     // Handler for adding a lesson to cart and opening cart modal. CODE IYI NDI YA TEMPORARY
     const handleAddToCart = (lesson: Lesson) => {
         addToCart(lesson);
-        setIsCartOpen(true);
+        setIsCartOpen(false);
     };
 
     if (isLoading) {

@@ -29,6 +29,7 @@ export interface Conversation {
     id: string;
     createdAt: string; // This will be an ISO date string
     updatedAt: string; // This will be an ISO date string
+    unreadCount: number;
     participants: UserProfile[];
 }
 

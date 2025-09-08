@@ -5,17 +5,54 @@ import { useAppContext } from '../../context/AppContext';
 import { BookOpen, ShoppingCart, ChevronDown, ChevronUp, Search, ExternalLink, FileText, Compass, BarChart, SlidersHorizontal, MessageSquare, Bell } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import NotificationScreen from '@/components/communication/NotificationScreen';
 import ChatScreen from '@/components/communication/ChatScreen';
+import { chatApiService, notificationApiService } from '@/services/api/api';
 
 export default function Header({ onCartClick }: { onCartClick?: () => void }) {
     const { user, logout, cart, searchTerm, setSearchTerm } = useAppContext();
+    const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+    const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
     const pathname = usePathname();
     const [isExploreDropdownOpen, setIsExploreDropdownOpen] = useState(false);
     const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [isChatOpen, setIsChatOpen] = useState(false);
+
+    // ... after your state declarations
+
+    useEffect(() => {
+        if (!user) return; // Don't run if the user is not logged in
+
+        const fetchData = async () => {
+            try {
+                // Use Promise.all to fetch both sets of data concurrently for better performance
+                const [notifications, conversations] = await Promise.all([
+                    notificationApiService.getNotifications(),
+                    chatApiService.getConversations()
+                ]);
+
+                // --- 1. Calculate unread notifications ---
+                // We filter the array to count only where `isRead` is false.
+                // NOTE: This assumes your `Notification` type has an `isRead: boolean` property.
+                const unreadNotifications = notifications.filter(n => !n.isRead).length;
+                setUnreadNotificationCount(unreadNotifications);
+
+                // --- 2. Calculate unread messages ---
+                // We sum the unread count from each conversation.
+                // NOTE: This assumes your `Conversation` type has an `unreadCount: number` property.
+                const unreadMessages = conversations.reduce((total, conv) => total + (conv.unreadCount || 0), 0);
+                setUnreadMessageCount(unreadMessages);
+
+            } catch (error) {
+                console.error("Failed to fetch initial data for header:", error);
+            }
+        };
+
+        fetchData();
+    }, [user]); // This effect will run once when the component mounts with a logged-in user
+
     const isActive = (path: string) => pathname.startsWith(path);
     const isTutorFinderPage = pathname.startsWith('/find-online-tutor');
     const shouldShowSearchBar = user?.role === 'student' || (user?.role === 'teacher' && !isTutorFinderPage);
@@ -158,9 +195,11 @@ export default function Header({ onCartClick }: { onCartClick?: () => void }) {
                                     className="relative text-slate-300 hover:text-white transition-colors">
                                     <MessageSquare className="h-6 w-6 cursor-pointer " />
                                     {/* Example of a number badge for new messages */}
-                                    <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
-                                        3
-                                    </span>
+                                    {unreadMessageCount > 0 && (
+                                        <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                                            {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
+                                        </span>
+                                    )}
                                 </button>
                                 {/* --- NEW: Notification Icon --- */}
                                 <button
@@ -168,10 +207,12 @@ export default function Header({ onCartClick }: { onCartClick?: () => void }) {
                                     className="relative text-slate-300 hover:text-white transition-colors">
                                     <Bell className="h-6 w-6 cursor-pointer " />
                                     {/* You can add a badge for new notifications */}
-                                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
-                                    </span>
+                                    {unreadNotificationCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
+                                        </span>
+                                    )}
                                 </button>
 
                                 {/* Cart icon (students only) - UNCHANGED */}
