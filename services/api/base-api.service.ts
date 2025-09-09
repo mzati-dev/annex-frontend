@@ -1,6 +1,17 @@
 // src/services/api/base-api.service.ts
 import { API_BASE_URL } from './api.constants';
 
+// ✅ STEP 1: ADD THIS CUSTOM ERROR CLASS AT THE TOP
+export class ApiError extends Error {
+    public readonly status: number;
+    public readonly statusText: string;
+
+    constructor(message: string, status: number, statusText: string) {
+        super(message);
+        this.status = status;
+        this.statusText = statusText;
+    }
+}
 export class BaseApiService {
     protected async request<T>(
         method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
@@ -38,9 +49,23 @@ export class BaseApiService {
 
         const response = await fetch(url, config);
 
+        //     if (!response.ok) {
+        //         const error = await response.json().catch(() => ({}));
+        //         throw new Error(error.message || 'Request failed');
+        //     }
+
+        //     return response.json();
+        // }
+
+        // ✅ STEP 2: REPLACE YOUR OLD if BLOCK WITH THIS ONE
         if (!response.ok) {
-            const error = await response.json().catch(() => ({}));
-            throw new Error(error.message || 'Request failed');
+            const errorData = await response.json().catch(() => ({ message: 'Request failed without a JSON body' }));
+            throw new ApiError(errorData.message || response.statusText, response.status, response.statusText);
+        }
+
+        const contentType = response.headers.get('content-type');
+        if (response.status === 204 || !contentType || !contentType.includes('application/json')) {
+            return {} as T;
         }
 
         return response.json();

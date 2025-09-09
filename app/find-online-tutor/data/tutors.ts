@@ -1,4 +1,8 @@
-// src/data/tutors.ts
+// // src/data/tutors.ts
+
+import { UserProfile } from "@/types";
+
+// import { TutorProfile } from "@/types";
 
 // Defines the shape of the full tutor profile object
 export interface TutorProfile {
@@ -14,6 +18,7 @@ export interface TutorProfile {
     isAvailableForNewStudents: boolean;
     whatsappNumber?: string;
     monthlyRate: number | null;
+    user: UserProfile;
 }
 
 // Defines the shape of the data coming from the editor form
@@ -40,6 +45,14 @@ export const mockTutors: TutorProfile[] = [
         subjects: ['Biology', 'Chemistry', 'Physics'],
         isAvailableForNewStudents: true,
         monthlyRate: null,
+        user: {
+            id: 'u1',
+            name: 'John Phiri',
+            email: 'john.phiri@example.com',
+            phone: '0991234567',
+            role: 'teacher',
+            profileImageUrl: '/avatars/john.jpg', // Example image path
+        }
     },
     {
         id: 't2',
@@ -53,6 +66,14 @@ export const mockTutors: TutorProfile[] = [
         subjects: ['Mathematics', 'Statistics'],
         isAvailableForNewStudents: true,
         monthlyRate: null,
+        user: {
+            id: 'u1',
+            name: 'John Phiri',
+            email: 'john.phiri@example.com',
+            phone: '0991234567',
+            role: 'teacher',
+            profileImageUrl: '/avatars/john.jpg', // Example image path
+        }
     },
     {
         id: 't3',
@@ -66,6 +87,14 @@ export const mockTutors: TutorProfile[] = [
         subjects: ['Mathematics', 'Statistics'],
         isAvailableForNewStudents: true,
         monthlyRate: null,
+        user: {
+            id: 'u1',
+            name: 'John Phiri',
+            email: 'john.phiri@example.com',
+            phone: '0991234567',
+            role: 'teacher',
+            profileImageUrl: '/avatars/john.jpg', // Example image path
+        }
     },
 
     {
@@ -80,6 +109,14 @@ export const mockTutors: TutorProfile[] = [
         subjects: ['Mathematics', 'Statistics'],
         isAvailableForNewStudents: true,
         monthlyRate: null,
+        user: {
+            id: 'u1',
+            name: 'John Phiri',
+            email: 'john.phiri@example.com',
+            phone: '0991234567',
+            role: 'teacher',
+            profileImageUrl: '/avatars/john.jpg', // Example image path
+        }
     }
 
 ];

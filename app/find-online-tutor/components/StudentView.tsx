@@ -4,18 +4,20 @@ import { Star, MessageSquare, DollarSign } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
 import { API_BASE_URL } from '@/services/api/api.constants';
 import ChatScreen from '../../../components/communication/ChatScreen';
+import { TutorProfile } from '../data/tutors';
 
 
-const TutorCard = ({ tutor }: { tutor: any }) => {
+
+const TutorCard = ({ tutor }: { tutor: TutorProfile }) => {
     const { openChatWithTutor } = useAppContext();
 
-    const fullAvatarUrl = tutor.avatar ? `${API_BASE_URL}${tutor.avatar}` : null;
+    const fullAvatarUrl = tutor.user?.profileImageUrl ? `${API_BASE_URL}${tutor.user.profileImageUrl}` : null;
     const nameParts = tutor.name?.split(' ') || [];
     const surname = nameParts.length > 1 ? nameParts[nameParts.length - 1] : tutor.name;
 
     const handleContactTutor = () => {
         console.log('Attempting to open chat for Tutor ID:', tutor.id);
-        openChatWithTutor(tutor.id);
+        openChatWithTutor(tutor.user.id);
     };
 
     return (
@@ -38,8 +40,8 @@ const TutorCard = ({ tutor }: { tutor: any }) => {
                         <div>
                             <h3 className="text-xl font-bold text-white">{`${tutor.title} ${surname}`}</h3>
                             <div className="flex items-center text-sm text-yellow-400 mt-1">
-                                <Star className="h-4 w-4 fill-current mr-1" />
-                                <span>{tutor.rating?.toFixed(1) || '0.0'} ({tutor.reviews || 0} reviews)</span>
+                                {/* <Star className="h-4 w-4 fill-current mr-1" />
+                                <span>{tutor.rating?.toFixed(1) || '0.0'} ({tutor.reviews || 0} reviews)</span> */}
                             </div>
                         </div>
                     </div>
@@ -86,9 +88,9 @@ const TutorCard = ({ tutor }: { tutor: any }) => {
 
 
 export default function StudentTutorFinder() {
-    const { searchTerm, isChatOpen, tutors, activeChatId, closeChat } = useAppContext();
+    const { searchTerm, isChatOpen, tutors, activeChatId, closeChat, isLoadingTutors } = useAppContext();
     console.log('Context Active Chat ID:', activeChatId);
-    const selectedTutor = tutors.find(tutor => tutor.id === activeChatId);
+    const selectedTutor = tutors.find(tutor => tutor.user.id === activeChatId);
     console.log('Found Tutor Object:', selectedTutor);
     const filteredTutors = tutors.filter(tutor =>
         searchTerm === '' ||
@@ -97,6 +99,14 @@ export default function StudentTutorFinder() {
             subject.toLowerCase().includes(searchTerm.toLowerCase())
         )
     );
+
+    if (isLoadingTutors) {
+        return (
+            <main className="min-h-screen bg-slate-900 text-white p-8">
+                <div className="text-center text-xl">Loading Tutors...</div>
+            </main>
+        );
+    }
 
     return (
         <main className="min-h-screen bg-slate-900 text-white p-4 sm:p-6 md:p-8">

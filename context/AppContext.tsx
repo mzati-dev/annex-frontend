@@ -2,9 +2,10 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { Lesson, UserProfile, CartItem, AppContextType, MOCK_LESSONS, Purchase } from '../types';
+import { Lesson, UserProfile, CartItem, AppContextType, MOCK_LESSONS, Purchase, } from '../types';
+// import { TutorProfile } from '@/app/find-online-tutor/data/tutors';
+import { chatApiService, profileApiService } from '@/services/api/api';
 import { TutorProfile } from '@/app/find-online-tutor/data/tutors';
-import { chatApiService } from '@/services/api/api';
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -19,6 +20,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const [toast, setToast] = useState<{ message: string; id: number } | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [tutors, setTutors] = useState<TutorProfile[]>([]);
+    const [isLoadingTutors, setIsLoadingTutors] = useState(true);
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [activeChatId, setActiveChatId] = useState<string | null>(null);
 
@@ -73,23 +75,39 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     // --- CORRECTED TUTOR LOADING LOGIC ---
     // This useEffect runs once on startup to load ALL tutor profiles from localStorage.
+
+
+    // useEffect(() => {
+    //     const allTutors: TutorProfile[] = [];
+    //     for (let i = 0; i < localStorage.length; i++) {
+    //         const key = localStorage.key(i);
+    //         // It looks for any key that starts with our specific pattern.
+    //         if (key && key.startsWith('tutorProfileData_')) {
+    //             try {
+    //                 const profileString = localStorage.getItem(key);
+    //                 if (profileString) {
+    //                     allTutors.push(JSON.parse(profileString));
+    //                 }
+    //             } catch (error) {
+    //                 console.error('Failed to parse a tutor profile from localStorage', error);
+    //             }
+    //         }
+    //     }
+    //     setTutors(allTutors);
+    // }, []);
+
     useEffect(() => {
-        const allTutors: TutorProfile[] = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            // It looks for any key that starts with our specific pattern.
-            if (key && key.startsWith('tutorProfileData_')) {
-                try {
-                    const profileString = localStorage.getItem(key);
-                    if (profileString) {
-                        allTutors.push(JSON.parse(profileString));
-                    }
-                } catch (error) {
-                    console.error('Failed to parse a tutor profile from localStorage', error);
-                }
+        const fetchAllTutors = async () => {
+            try {
+                const tutorsData = await profileApiService.getAllTutors();
+                setTutors(tutorsData);
+            } catch (error) {
+                console.error("Failed to fetch tutors:", error);
+            } finally {
+                setIsLoadingTutors(false);
             }
-        }
-        setTutors(allTutors);
+        };
+        fetchAllTutors();
     }, []);
 
     // --- CORRECTED TUTOR UPDATE FUNCTION ---
@@ -242,6 +260,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         openChatWithUser,
         openChatWithTutor,
         closeChat,
+        isLoadingTutors,
 
     };
 

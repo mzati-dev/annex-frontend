@@ -17,6 +17,12 @@ export const API_ENDPOINTS = {
         EARNINGS: '/teacher/earnings',
         STATS: '/teacher/stats',
     },
+    PROFILE: {
+        GET_ME: '/profiles/me',
+        UPDATE_ME: '/profiles/me',
+
+        GET_ALL_TUTORS: '/profiles',
+    },
     LESSONS: '/lessons',
     PURCHASES: {
         BASE: '/purchases',

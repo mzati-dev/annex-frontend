@@ -6,6 +6,9 @@ import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { TutorProfile, ProfileFormData } from '../data/tutors';
 import { API_BASE_URL } from '@/services/api/api.constants';
+// import { ProfileFormData, TutorProfile } from '@/types';
+import { profileApiService } from '@/services/api/api';
+import { ApiError } from '@/services/api/base-api.service';
 
 
 interface ProfileEditorProps {
@@ -143,7 +146,7 @@ interface TeacherProfileCardProps {
 const TeacherProfileCard: React.FC<TeacherProfileCardProps> = ({ tutor, onEditRequest }) => {
     const nameParts = tutor.name.split(' ');
     const surname = nameParts.length > 1 ? nameParts[nameParts.length - 1] : tutor.name;
-    const fullAvatarUrl = tutor.avatar ? `${API_BASE_URL}${tutor.avatar}` : null;
+    const fullAvatarUrl = tutor.user?.profileImageUrl ? `${API_BASE_URL}${tutor.user.profileImageUrl}` : null;
 
     return (
         <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-lg overflow-hidden">
@@ -167,8 +170,8 @@ const TeacherProfileCard: React.FC<TeacherProfileCardProps> = ({ tutor, onEditRe
                     <div>
                         <h3 className="text-xl font-bold text-white">{`${tutor.title} ${surname}`}</h3>
                         <div className="flex items-center text-sm text-yellow-400 mt-1">
-                            <Star className="h-4 w-4 fill-current mr-1" />
-                            <span>{tutor.rating.toFixed(1)} ({tutor.reviews} reviews)</span>
+                            {/* <Star className="h-4 w-4 fill-current mr-1" />
+                            <span>{tutor.rating.toFixed(1)} ({tutor.reviews} reviews)</span> */}
                         </div>
                     </div>
                 </div>
@@ -227,82 +230,187 @@ const StatCard: React.FC<StatCardProps> = ({ icon: Icon, value, label }) => (
 export default function TeacherTutorDashboard() {
     const [tutorProfile, setTutorProfile] = useState<TutorProfile | null>(null);
     const [isEditing, setIsEditing] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const { user, updateTutor } = useAppContext();
     const getProfileStorageKey = (userId: string | number) => `tutorProfileData_${userId}`;
 
 
+    // useEffect(() => {
+    //     if (user) {
+    //         const storageKey = getProfileStorageKey(user.id);
+    //         const savedProfileJson = localStorage.getItem(storageKey);
+
+    //         if (savedProfileJson) {
+    //             try {
+    //                 const savedProfile = JSON.parse(savedProfileJson);
+
+    //                 // This synchronizes the avatar with the main user profile image.
+    //                 // If you upload a new image on the Account page, it will be reflected here.
+    //                 if (user.profileImageUrl && savedProfile.avatar !== user.profileImageUrl) {
+    //                     savedProfile.avatar = user.profileImageUrl;
+    //                     localStorage.setItem(storageKey, JSON.stringify(savedProfile)); // Keep localStorage in sync
+    //                 }
+
+    //                 setTutorProfile(savedProfile);
+    //                 setIsEditing(false);
+    //             } catch (error) {
+    //                 console.error("Failed to parse saved profile:", error);
+    //                 setIsEditing(true); // Go to edit mode if parsing fails
+    //             }
+    //         } else {
+    //             // If no profile exists in storage, go to edit mode
+    //             setIsEditing(true);
+    //         }
+    //     }
+    // }, [user]); // The effect re-runs whenever the main 'user' object changes
+
     useEffect(() => {
         if (user) {
-            const storageKey = getProfileStorageKey(user.id);
-            const savedProfileJson = localStorage.getItem(storageKey);
-
-            if (savedProfileJson) {
+            const fetchProfile = async () => {
                 try {
-                    const savedProfile = JSON.parse(savedProfileJson);
-
-                    // This synchronizes the avatar with the main user profile image.
-                    // If you upload a new image on the Account page, it will be reflected here.
-                    if (user.profileImageUrl && savedProfile.avatar !== user.profileImageUrl) {
-                        savedProfile.avatar = user.profileImageUrl;
-                        localStorage.setItem(storageKey, JSON.stringify(savedProfile)); // Keep localStorage in sync
-                    }
-
-                    setTutorProfile(savedProfile);
+                    const profileData = await profileApiService.getMyProfile();
+                    setTutorProfile(profileData);
                     setIsEditing(false);
-                } catch (error) {
-                    console.error("Failed to parse saved profile:", error);
-                    setIsEditing(true); // Go to edit mode if parsing fails
+                } catch (err) {
+                    // --- THIS IS THE CORRECTED LOGIC ---
+                    if (err instanceof ApiError && err.status === 404) {
+                        // It's a new tutor, show the creation form.
+                        setIsEditing(true);
+                    } else {
+                        // It's a different, unexpected error.
+                        setError("Could not load your profile.");
+                        console.error(err); // Log the actual error for debugging
+                    }
+                    // --- END OF CORRECTION ---
+                } finally {
+                    setIsLoading(false);
                 }
-            } else {
-                // If no profile exists in storage, go to edit mode
-                setIsEditing(true);
-            }
+            };
+            fetchProfile();
         }
-    }, [user]); // The effect re-runs whenever the main 'user' object changes
+    }, [user]);
 
-    const teacherData = {
-        stats: { students: 15, earningsThisMonth: 150000, rating: 4.9 },
+
+    // useEffect(() => {
+    //     // Only run if a user is logged in.
+    //     if (user) {
+    //         const fetchProfile = async () => {
+    //             try {
+    //                 // STEP 1: It ASKS the server, "Does a profile exist?"
+    //                 const profileData = await profileApiService.getMyProfile();
+
+    //                 // This code only runs for an EXISTING teacher.
+    //                 setTutorProfile(profileData);
+    //                 setIsEditing(false); // It shows the existing profile.
+
+    //             } catch (err: any) {
+    //                 // STEP 2: The server answers "Not Found" for a NEW teacher.
+    //                 if (err.message.includes('Not Found')) {
+
+    //                     // STEP 3: The code reacts to "Not Found" and shows the creation form.
+    //                     setIsEditing(true);
+    //                 } else {
+    //                     // This is for other, unexpected errors.
+    //                     setError("Could not load your profile.");
+    //                 }
+    //             } finally {
+    //                 setIsLoading(false);
+    //             }
+    //         };
+
+    //         // This starts the process.
+    //         fetchProfile();
+    //     }
+    // }, [user]);
+
+
+    // const teacherData = {
+    //     stats: { students: 15, earningsThisMonth: 150000, rating: 4.9 },
+    // };
+
+    // const handleProfileSave = (formData: ProfileFormData) => {
+    //     if (!user) return;
+
+    //     const newProfile: TutorProfile = {
+    //         id: user.id,
+    //         userId: user.id,
+    //         ...formData,
+    //         rating: 4.5,
+    //         reviews: 0,
+    //         isAvailableForNewStudents: true,
+    //         avatar: user.profileImageUrl || ''
+    //     };
+
+    //     const storageKey = getProfileStorageKey(user.id);
+    //     localStorage.setItem(storageKey, JSON.stringify(newProfile));
+
+    //     setTutorProfile(newProfile);
+    //     setIsEditing(false);
+    //     updateTutor(newProfile); // This now calls the corrected function in AppContext
+    // };
+
+    const handleProfileSave = async (formData: ProfileFormData) => {
+        try {
+
+            const updatedProfile = await profileApiService.updateMyProfile(formData);
+            setTutorProfile(updatedProfile);
+            setIsEditing(false);
+            if (updateTutor) {
+                updateTutor(updatedProfile);
+            }
+        } catch (err) {
+            console.error("Failed to save profile:", err);
+            alert('Error: Could not save your profile.')
+        }
     };
 
-    const handleProfileSave = (formData: ProfileFormData) => {
-        if (!user) return;
 
-        const newProfile: TutorProfile = {
-            id: user.id,
-            userId: user.id,
-            ...formData,
-            rating: 4.5,
-            reviews: 0,
-            isAvailableForNewStudents: true,
-            avatar: user.profileImageUrl || ''
+    // const handleAvailabilityToggle = () => {
+    //     if (!tutorProfile || !user) return;
+
+    //     const updatedProfile = { ...tutorProfile, isAvailableForNewStudents: !tutorProfile.isAvailableForNewStudents };
+    //     const storageKey = getProfileStorageKey(user.id);
+    //     localStorage.setItem(storageKey, JSON.stringify(updatedProfile));
+
+    //     setTutorProfile(updatedProfile);
+    //     updateTutor(updatedProfile);
+    // };
+
+    const handleAvailabilityToggle = async () => {
+        // Safety check: only run if a profile is loaded.
+        if (!tutorProfile) return;
+
+        // This is the only piece of data we need to change.
+        const updatedData = {
+            isAvailableForNewStudents: !tutorProfile.isAvailableForNewStudents
         };
 
-        const storageKey = getProfileStorageKey(user.id);
-        localStorage.setItem(storageKey, JSON.stringify(newProfile));
+        try {
+            // STEP 1: Send the updated data to the backend API.
+            const updatedProfile = await profileApiService.updateMyProfile(updatedData);
 
-        setTutorProfile(newProfile);
-        setIsEditing(false);
-        updateTutor(newProfile); // This now calls the corrected function in AppContext
+            // STEP 2: The backend saves the change and returns the full, updated profile.
+
+            // STEP 3: Update the UI with the confirmed data from the server.
+            setTutorProfile(updatedProfile);
+            if (updateTutor) {
+                updateTutor(updatedProfile);
+            }
+        } catch (err) {
+            // STEP 4 (ERROR CASE): If the save fails, show an alert.
+            console.error("Failed to update availability:", err);
+            alert('Error: Could not update your availability status.');
+        }
     };
 
-    const handleAvailabilityToggle = () => {
-        if (!tutorProfile || !user) return;
-
-        const updatedProfile = { ...tutorProfile, isAvailableForNewStudents: !tutorProfile.isAvailableForNewStudents };
-        const storageKey = getProfileStorageKey(user.id);
-        localStorage.setItem(storageKey, JSON.stringify(updatedProfile));
-
-        setTutorProfile(updatedProfile);
-        updateTutor(updatedProfile);
-    };
-
-    const clearTemporaryData = () => {
-        if (!user) return;
-        const storageKey = getProfileStorageKey(user.id);
-        localStorage.removeItem(storageKey);
-        setTutorProfile(null);
-        setIsEditing(true);
-    };
+    // const clearTemporaryData = () => {
+    //     if (!user) return;
+    //     const storageKey = getProfileStorageKey(user.id);
+    //     localStorage.removeItem(storageKey);
+    //     setTutorProfile(null);
+    //     setIsEditing(true);
+    // };
 
     const initialProfileDataForEditor = tutorProfile || {
         name: user?.name || '',
@@ -311,6 +419,13 @@ export default function TeacherTutorDashboard() {
         subjects: [],
         monthlyRate: null
     };
+
+    if (isLoading) {
+        return <main className="min-h-screen bg-slate-900 flex items-center justify-center text-white"><p>Loading Your Profile...</p></main>;
+    }
+    if (error) {
+        return <main className="min-h-screen bg-slate-900 flex items-center justify-center text-red-400"><p>Error: {error}</p></main>;
+    }
 
 
     return (
@@ -332,14 +447,14 @@ export default function TeacherTutorDashboard() {
                     </div>
                 </div>
 
-                <div className="mb-4 text-right">
+                {/* <div className="mb-4 text-right">
                     <button
                         onClick={clearTemporaryData}
                         className="text-xs text-slate-400 hover:text-slate-300 underline"
                     >
                         Reset My Profile Data
                     </button>
-                </div>
+                </div> */}
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                     <div className="lg:col-span-2 space-y-8">
@@ -371,11 +486,11 @@ export default function TeacherTutorDashboard() {
                     <div className="space-y-6">
                         <div className="bg-slate-800/50 p-6 rounded-lg border border-slate-700">
                             <h3 className="text-xl font-bold mb-4">My Stats</h3>
-                            <div className="space-y-4">
+                            {/* <div className="space-y-4">
                                 <StatCard icon={Users} value={teacherData.stats.students} label="Active Students" />
                                 <StatCard icon={DollarSign} value={`K${teacherData.stats.earningsThisMonth.toLocaleString()}`} label="Earnings this Month" />
                                 <StatCard icon={Star} value={teacherData.stats.rating.toFixed(1)} label="Average Rating" />
-                            </div>
+                            </div> */}
                         </div>
                     </div>
                 </div>

@@ -2,6 +2,32 @@
 
 import { TutorProfile } from "@/app/find-online-tutor/data/tutors";
 
+// src/data/tutors.ts
+
+// Defines the shape of the full tutor profile object
+// export interface TutorProfile {
+//     id: string;
+//     userId: string;
+//     title: string;
+//     name: string;
+
+//     bio: string;
+//     subjects: string[];
+//     isAvailableForNewStudents: boolean;
+//     monthlyRate: number | null;
+//     user: UserProfile;
+// }
+
+// // Defines the shape of the data coming from the editor form
+// export interface ProfileFormData {
+//     title: string;
+//     name: string;
+//     bio: string;
+//     subjects: string[];
+//     whatsappNumber?: string;
+//     monthlyRate: number | null;
+// }
+
 
 export interface Notification {
     id: string;
@@ -115,7 +141,7 @@ export interface AppContextType {
     openChatWithUser: (participantId: string) => Promise<void>;
     openChatWithTutor: (tutorId: string) => Promise<void>; // ADD THIS
     closeChat: () => void;
-
+    isLoadingTutors: boolean;
     setUser: (user: UserProfile) => void;
     // Authentication methods
     login: (user: UserProfile) => void; // Login handler
