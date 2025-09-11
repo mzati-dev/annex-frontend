@@ -143,6 +143,8 @@ export interface AppContextType {
     closeChat: () => void;
     isLoadingTutors: boolean;
     setUser: (user: UserProfile) => void;
+    unreadMessageCount: number;
+    setUnreadMessageCount: React.Dispatch<React.SetStateAction<number>>;
     // Authentication methods
     login: (user: UserProfile) => void; // Login handler
     logout: () => void;                 // Logout handler

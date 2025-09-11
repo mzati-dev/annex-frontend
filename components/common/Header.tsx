@@ -11,8 +11,8 @@ import ChatScreen from '@/components/communication/ChatScreen';
 import { chatApiService, notificationApiService } from '@/services/api/api';
 
 export default function Header({ onCartClick }: { onCartClick?: () => void }) {
-    const { user, logout, cart, searchTerm, setSearchTerm } = useAppContext();
-    const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+    const { user, logout, cart, searchTerm, setSearchTerm, unreadMessageCount, setUnreadMessageCount } = useAppContext();
+
     const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
     const pathname = usePathname();
     const [isExploreDropdownOpen, setIsExploreDropdownOpen] = useState(false);
@@ -20,30 +20,58 @@ export default function Header({ onCartClick }: { onCartClick?: () => void }) {
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [isChatOpen, setIsChatOpen] = useState(false);
 
-    // ... after your state declarations
 
+
+    // useEffect(() => {
+    //     if (!user) return; 
+
+    //     const fetchData = async () => {
+    //         try {
+
+    //             const [notifications, conversations] = await Promise.all([
+    //                 notificationApiService.getNotifications(),
+    //                 chatApiService.getConversations()
+    //             ]);
+
+
+    //             const unreadNotifications = notifications.filter(n => !n.isRead).length;
+    //             setUnreadNotificationCount(unreadNotifications);
+
+
+    //             const unreadMessages = conversations.reduce((total, conv) => total + (conv.unreadCount || 0), 0);
+    //             setUnreadMessageCount(unreadMessages);
+
+    //         } catch (error) {
+    //             console.error("Failed to fetch initial data for header:", error);
+    //         }
+    //     };
+
+    //     fetchData();
+    // }, [user]); 
+
+    // Header.tsx
+
+    // V V V V V REPLACE YOUR OLD useEffect WITH THIS ONE V V V V V
     useEffect(() => {
-        if (!user) return; // Don't run if the user is not logged in
+        // If there is no user, do nothing.
+        if (!user) return;
 
+        // This function will run once to get the starting count.
         const fetchData = async () => {
             try {
-                // Use Promise.all to fetch both sets of data concurrently for better performance
-                const [notifications, conversations] = await Promise.all([
-                    notificationApiService.getNotifications(),
-                    chatApiService.getConversations()
-                ]);
+                // 1. Call the API to get the total number of unread messages.
+                const unreadData = await chatApiService.getTotalUnreadCount();
 
-                // --- 1. Calculate unread notifications ---
-                // We filter the array to count only where `isRead` is false.
-                // NOTE: This assumes your `Notification` type has an `isRead: boolean` property.
+                // 2. Update the GLOBAL state with the number from the API.
+                // This will make the red badge appear with the correct number.
+                setUnreadMessageCount(unreadData.count);
+
+                // Your code for fetching notifications can remain here if you have it.
+                const [notifications] = await Promise.all([
+                    notificationApiService.getNotifications(),
+                ]);
                 const unreadNotifications = notifications.filter(n => !n.isRead).length;
                 setUnreadNotificationCount(unreadNotifications);
-
-                // --- 2. Calculate unread messages ---
-                // We sum the unread count from each conversation.
-                // NOTE: This assumes your `Conversation` type has an `unreadCount: number` property.
-                const unreadMessages = conversations.reduce((total, conv) => total + (conv.unreadCount || 0), 0);
-                setUnreadMessageCount(unreadMessages);
 
             } catch (error) {
                 console.error("Failed to fetch initial data for header:", error);
@@ -51,7 +79,7 @@ export default function Header({ onCartClick }: { onCartClick?: () => void }) {
         };
 
         fetchData();
-    }, [user]); // This effect will run once when the component mounts with a logged-in user
+    }, [user, setUnreadMessageCount]); // This tells React to re-run the effect if the user logs in/out.
 
     const isActive = (path: string) => pathname.startsWith(path);
     const isTutorFinderPage = pathname.startsWith('/find-online-tutor');

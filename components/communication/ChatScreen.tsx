@@ -24,7 +24,7 @@ const formatTimestamp = (isoDate: string) => {
 
 export default function ChatScreen({ onClose }: { onClose: () => void }) {
 
-    const { user, activeChatId } = useAppContext();
+    const { user, activeChatId, setUnreadMessageCount } = useAppContext();
     const [isLoading, setIsLoading] = useState(true);
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [messages, setMessages] = useState<{ [key: string]: Message[] }>({});
@@ -34,12 +34,41 @@ export default function ChatScreen({ onClose }: { onClose: () => void }) {
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
 
+    // useEffect(() => {
+    //     if (!user) return;
+    //     const newSocket = io(API_BASE_URL);
+    //     setSocket(newSocket);
+    //     newSocket.emit('joinRoom', user.id);
+    //     newSocket.on('newMessage', (incomingMessage: Message) => {
+    //         setMessages(prev => {
+    //             const conversationId = incomingMessage.conversation.id;
+    //             const existingMessages = prev[conversationId] || [];
+    //             if (existingMessages.some(msg => msg.id === incomingMessage.id)) {
+    //                 return prev;
+    //             }
+    //             return {
+    //                 ...prev,
+    //                 [conversationId]: [...existingMessages, incomingMessage],
+    //             };
+    //         });
+    //     });
+
+    //     return () => {
+    //         newSocket.off('newMessage');
+    //         newSocket.disconnect();
+    //     };
+    // }, [user]);
+
+
+    // REPLACE your old socket useEffect with this new one
     useEffect(() => {
         if (!user) return;
         const newSocket = io(API_BASE_URL);
         setSocket(newSocket);
         newSocket.emit('joinRoom', user.id);
+
         newSocket.on('newMessage', (incomingMessage: Message) => {
+            // This part, which adds the new message to the chat window, is correct.
             setMessages(prev => {
                 const conversationId = incomingMessage.conversation.id;
                 const existingMessages = prev[conversationId] || [];
@@ -51,13 +80,27 @@ export default function ChatScreen({ onClose }: { onClose: () => void }) {
                     [conversationId]: [...existingMessages, incomingMessage],
                 };
             });
+
+            // V V V V V THIS IS THE NEW LOGIC V V V V V
+            // Check if the incoming message is for the chat that is currently open.
+            if (incomingMessage.conversation.id !== activeConversation?.id) {
+                // If the message is for a DIFFERENT chat, increase the global counter by 1.
+                setUnreadMessageCount(prevCount => prevCount + 1);
+            } else {
+                // If the user IS currently viewing this chat, we tell the backend
+                // to mark the message as read immediately.
+                chatApiService.markConversationAsRead(incomingMessage.conversation.id);
+            }
+            // ^ ^ ^ ^ ^ END OF NEW LOGIC ^ ^ ^ ^ ^
         });
 
         return () => {
             newSocket.off('newMessage');
             newSocket.disconnect();
         };
-    }, [user]);
+        // This dependency array is CRUCIAL. It makes sure the `if` statement
+        // always knows which conversation is currently active.
+    }, [user, activeConversation, setUnreadMessageCount]);
 
 
     useEffect(() => {
@@ -100,8 +143,45 @@ export default function ChatScreen({ onClose }: { onClose: () => void }) {
     }, [messages, activeConversation]);
 
 
+    // const handleSelectConversation = async (conv: Conversation) => {
+    //     setActiveConversation(conv);
+    //     if (!messages[conv.id]) {
+    //         try {
+    //             const history = await chatApiService.getMessages(conv.id);
+    //             setMessages(prev => ({ ...prev, [conv.id]: history }));
+    //         } catch (error) {
+    //             console.error(`Failed to fetch messages for conversation ${conv.id}:`, error);
+    //         }
+    //     }
+    // };
+
+    // REPLACE your old function with this new one
     const handleSelectConversation = async (conv: Conversation) => {
         setActiveConversation(conv);
+
+        // V V V V V THIS IS THE NEW LOGIC V V V V V
+        // First, check if the conversation being opened has an unread count greater than zero.
+        if (conv.unreadCount && conv.unreadCount > 0) {
+            try {
+                // 1. Tell the backend to mark all messages in this chat as "read".
+                await chatApiService.markConversationAsRead(conv.id);
+
+                // 2. Subtract this chat's unread count from the GLOBAL total.
+                //    This immediately updates the red badge in the Header.
+                setUnreadMessageCount(prevCount => Math.max(0, prevCount - conv.unreadCount));
+
+                // 3. Update the local conversation list to set this chat's count to 0.
+                //    This makes the small number badge on the chat list disappear.
+                setConversations(prevConvos => prevConvos.map(c =>
+                    c.id === conv.id ? { ...c, unreadCount: 0 } : c
+                ));
+            } catch (error) {
+                console.error("Failed to mark conversation as read:", error);
+            }
+        }
+        // ^ ^ ^ ^ ^ END OF NEW LOGIC ^ ^ ^ ^ ^
+
+        // This part of your original code for fetching messages stays the same.
         if (!messages[conv.id]) {
             try {
                 const history = await chatApiService.getMessages(conv.id);
@@ -152,6 +232,37 @@ export default function ChatScreen({ onClose }: { onClose: () => void }) {
                         const otherParticipant = getOtherParticipant(conv);
                         if (!otherParticipant) return null;
                         return (
+                            // REPLACE THE CONTENT OF THIS DIV
+                            <div key={conv.id} onClick={() => handleSelectConversation(conv)} className={`flex items-center p-4 cursor-pointer border-l-4 transition-colors ${activeConversation?.id === conv.id ? 'bg-slate-900 border-blue-500' : 'border-transparent hover:bg-slate-700/50'}`}>
+                                <img src={otherParticipant.profileImageUrl || `https://ui-avatars.com/api/?name=${otherParticipant.name.replace(' ', '+')}&background=2563eb&color=fff&rounded=true`} alt={otherParticipant.name} className="w-12 h-12 rounded-full object-cover" />
+
+                                {/* V V V V V THIS IS THE UPDATED PART V V V V V */}
+                                <div className="ml-4 flex-grow overflow-hidden">
+                                    <div className="flex justify-between items-center">
+                                        <h3 className="font-semibold truncate">{otherParticipant.name}</h3>
+                                        <span className="text-xs text-slate-400 flex-shrink-0 ml-2">{formatTimestamp(conv.updatedAt)}</span>
+                                    </div>
+                                    <div className="flex justify-between items-start mt-1">
+                                        <p className="text-sm text-slate-400 truncate">
+                                            {/* You can add last message preview here later */}
+                                        </p>
+                                        {/* This logic displays the badge only if the count is > 0 */}
+                                        {conv.unreadCount > 0 && (
+                                            <span className="flex-shrink-0 ml-2 bg-blue-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                                                {conv.unreadCount}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                                {/* ^ ^ ^ ^ ^ END OF THE UPDATED PART ^ ^ ^ ^ ^ */}
+
+                            </div>
+                        )
+                    })}
+                    {/* {!isLoading && conversations.map(conv => {
+                        const otherParticipant = getOtherParticipant(conv);
+                        if (!otherParticipant) return null;
+                        return (
                             <div key={conv.id} onClick={() => handleSelectConversation(conv)} className={`flex items-center p-4 cursor-pointer border-l-4 transition-colors ${activeConversation?.id === conv.id ? 'bg-slate-900 border-blue-500' : 'border-transparent hover:bg-slate-700/50'}`}>
                                 <img src={otherParticipant.profileImageUrl || `https://ui-avatars.com/api/?name=${otherParticipant.name.replace(' ', '+')}&background=2563eb&color=fff&rounded=true`} alt={otherParticipant.name} className="w-12 h-12 rounded-full object-cover" />
                                 <div className="ml-4 flex-grow overflow-hidden">
@@ -162,7 +273,7 @@ export default function ChatScreen({ onClose }: { onClose: () => void }) {
                                 </div>
                             </div>
                         )
-                    })}
+                    })} */}
                 </div>
             </aside>
             <main className={`flex-1 flex-col ${activeConversation ? 'flex' : 'hidden md:flex'}`}>

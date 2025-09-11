@@ -3,7 +3,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lesson, UserProfile, CartItem, AppContextType, MOCK_LESSONS, Purchase, } from '../types';
-// import { TutorProfile } from '@/app/find-online-tutor/data/tutors';
 import { chatApiService, profileApiService } from '@/services/api/api';
 import { TutorProfile } from '@/app/find-online-tutor/data/tutors';
 
@@ -23,6 +22,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const [isLoadingTutors, setIsLoadingTutors] = useState(true);
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [activeChatId, setActiveChatId] = useState<string | null>(null);
+    const [unreadMessageCount, setUnreadMessageCount] = useState(0);
 
 
 
@@ -261,6 +261,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         openChatWithTutor,
         closeChat,
         isLoadingTutors,
+        unreadMessageCount,
+        setUnreadMessageCount,
 
     };
 

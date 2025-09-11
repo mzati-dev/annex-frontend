@@ -57,5 +57,7 @@ export const API_ENDPOINTS = {
         GET_CONVERSATIONS: '/chat/conversations',
         GET_MESSAGES: (conversationId: string) => `/chat/conversations/${conversationId}/messages`,
         CREATE_CONVERSATION: '/chat/conversations',
+        GET_UNREAD_COUNT: '/chat/unread-count',
+        MARK_AS_READ: (conversationId: string) => `/chat/conversations/${conversationId}/read`,
     },
 };

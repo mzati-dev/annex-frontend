@@ -14,4 +14,23 @@ export class ChatApiService extends BaseApiService {
     public async createConversation(participantId: string): Promise<Conversation> {
         return this.post<Conversation>(API_ENDPOINTS.CHAT.CREATE_CONVERSATION, { participantId });
     }
+
+    // --- ADDED METHODS ---
+
+    /**
+     * Fetches the total number of unread messages for the logged-in user.
+     */
+    public async getTotalUnreadCount(): Promise<{ count: number }> {
+        // Use this.get to stay consistent with your class structure
+        return this.get<{ count: number }>(API_ENDPOINTS.CHAT.GET_UNREAD_COUNT);
+    }
+
+    /**
+     * Marks all messages in a conversation as read.
+     */
+    public async markConversationAsRead(conversationId: string): Promise<{ updated: number }> {
+        // Use this.put for the PUT request
+        return this.put<{ updated: number }>(API_ENDPOINTS.CHAT.MARK_AS_READ(conversationId), {});
+    }
+
 }
