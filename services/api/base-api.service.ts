@@ -12,6 +12,32 @@ export class ApiError extends Error {
         this.statusText = statusText;
     }
 }
+
+// ✅ NEW: Create a standalone utility function for the raw fetch call.
+// This function is no longer part of any class.
+export async function getRawResponse(endpoint: string): Promise<Response> {
+    const url = `${API_BASE_URL}${endpoint}`;
+    const headers: Record<string, string> = {};
+
+    const token = localStorage.getItem('token');
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const config: RequestInit = {
+        method: 'GET',
+        headers,
+        credentials: 'include',
+    };
+
+    const response = await fetch(url, config);
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new ApiError(errorData.message || response.statusText, response.status, response.statusText);
+    }
+    return response;
+}
 export class BaseApiService {
     protected async request<T>(
         method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
@@ -93,4 +119,6 @@ export class BaseApiService {
     protected delete<T>(endpoint: string): Promise<T> {
         return this.request('DELETE', endpoint);
     }
+
+
 }

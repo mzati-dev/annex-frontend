@@ -4,6 +4,7 @@ import { LessonsApiService } from './lessons-api.service';
 import { NotificationApiService } from './notification.service';
 import { ProfileApiService } from './profile-api.service';
 import { StudentApiService } from './student-api.service';
+import { SupportApiService } from './support-api.service';
 import { TeacherApiService } from './teacher-api.service';
 import { UserApiService } from './user-api.service';
 
@@ -16,3 +17,4 @@ export const userApiService = new UserApiService();
 export const notificationApiService = new NotificationApiService();
 export const chatApiService = new ChatApiService();
 export const profileApiService = new ProfileApiService();
+export const supportApiService = new SupportApiService();

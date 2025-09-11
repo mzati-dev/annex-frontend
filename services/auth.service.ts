@@ -1,6 +1,5 @@
 // auth.service.ts
 
-// Step 1: Import the CORRECT user type from your shared types file
 import { UserProfile } from '@/types';
 import { API_ENDPOINTS } from "./api/api.constants";
 import { BaseApiService } from "./api/base-api.service";

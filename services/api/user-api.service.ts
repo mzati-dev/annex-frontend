@@ -1,6 +1,6 @@
 // src/services/api/user-api.service.ts
 
-import { BaseApiService } from './base-api.service';
+import { BaseApiService, getRawResponse } from './base-api.service';
 import { API_ENDPOINTS } from './api.constants';
 import { UserProfile as User, UserProfile } from '@/types';// Assuming your User type is in a central types file
 
@@ -32,4 +32,22 @@ export class UserApiService extends BaseApiService {
         // PATCH is the correct method for partial updates.
         return this.request<UserProfile>('PATCH', API_ENDPOINTS.USER.UPDATE_PROFILE, data);
     }
+
+    public async downloadUserData(): Promise<Response> {
+        // ✅ CALL the standalone function directly, NOT "this.getRawResponse"
+        return getRawResponse(API_ENDPOINTS.USER.DOWNLOAD_DATA);
+    }
+
+    // === START: NEW DELETE ACCOUNT METHOD ===
+    /**
+     * Sends a request to the backend to permanently delete the current user's account.
+     * @returns A promise that resolves when the request is successful.
+     */
+    public async deleteAccount(): Promise<void> {
+        // Use the 'delete' helper method from BaseApiService.
+        // It returns a promise that resolves on success or throws an ApiError on failure.
+        // The backend returns a 204 No Content, so the expected return type is `void`.
+        await this.delete<void>(API_ENDPOINTS.USER.DELETE_ACCOUNT);
+    }
+    // === END: NEW DELETE ACCOUNT METHOD ===
 }

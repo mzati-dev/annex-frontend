@@ -20,7 +20,6 @@ export const API_ENDPOINTS = {
     PROFILE: {
         GET_ME: '/profiles/me',
         UPDATE_ME: '/profiles/me',
-
         GET_ALL_TUTORS: '/profiles',
     },
     LESSONS: '/lessons',
@@ -39,6 +38,8 @@ export const API_ENDPOINTS = {
         UPLOAD_AVATAR: '/users/upload-avatar',
         GET_PROFILE: '/users/profile',
         UPDATE_PROFILE: '/users/profile',
+        DOWNLOAD_DATA: '/users/download-data',
+        DELETE_ACCOUNT: '/users/delete-account',
     },
     // --- START: NEW CODE FOR PAYMENT GATEWAY ---
     PAYMENTS: {
@@ -60,4 +61,9 @@ export const API_ENDPOINTS = {
         GET_UNREAD_COUNT: '/chat/unread-count',
         MARK_AS_READ: (conversationId: string) => `/chat/conversations/${conversationId}/read`,
     },
+    // === ADD THIS NEW SECTION ===
+    SUPPORT: {
+        CREATE_TICKET: '/support/ticket',
+    },
+    // ============================
 };
